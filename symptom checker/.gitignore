@@ -1,0 +1,8 @@
+classifier.pkl
+entities.pkl
+label_encoder.pkl
+precautions.pkl
+required_entities.pkl
+responses.pkl
+vectorizer.pkl
+_pychache_
