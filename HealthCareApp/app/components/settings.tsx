@@ -13,11 +13,24 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../context/AuthContext'; // Adjust the import path as needed
+import { useAuth } from '../context/AuthContext';
 
 interface SettingsPageProps {
   // You can add any additional props if needed
 }
+
+const COLORS = {
+  primary: '#FF4D8D', // Vibrant pink
+  secondary: '#121212', // Rich black
+  background: '#FFFFFF', // White
+  backgroundAlt: '#F8F0F4', // Very light pink
+  text: '#121212', // Dark text
+  textLight: '#FFFFFF', // White text
+  gray: '#888888', // Gray for less important text
+  borderColor: '#FFCCE0', // Light pink border
+  switchActive: '#FF4D8D', // Pink for active switches
+  switchTrack: '#FFE0EB', // Light pink for switch track
+};
 
 const SettingsPage: React.FC<SettingsPageProps> = () => {
   const router = useRouter();
@@ -97,9 +110,23 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
     >
       <Text style={styles.settingsItemText}>{title}</Text>
       {rightElement || (
-        <Ionicons name="chevron-forward" size={20} color="#666" />
+        <Ionicons name="chevron-forward" size={20} color={COLORS.primary} />
       )}
     </TouchableOpacity>
+  );
+
+  // Custom switch component with our color scheme
+  const CustomSwitch: React.FC<{
+    value: boolean;
+    onValueChange: (value: boolean) => void;
+  }> = ({ value, onValueChange }) => (
+    <Switch
+      value={value}
+      onValueChange={onValueChange}
+      trackColor={{ false: '#E0E0E0', true: COLORS.switchTrack }}
+      thumbColor={value ? COLORS.switchActive : '#FFFFFF'}
+      ios_backgroundColor="#E0E0E0"
+    />
   );
 
   return (
@@ -107,7 +134,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <Ionicons name="chevron-back" size={24} color="#000" />
+          <Ionicons name="chevron-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
         <View style={styles.backButton} /> {/* Empty view for layout balance */}
@@ -116,23 +143,25 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
       <ScrollView style={styles.scrollView}>
         {/* User Profile Section */}
         <View style={styles.profileSection}>
-          <Image
-            source={{ uri: user?.avatarUrl || 'https://via.placeholder.com/60' }}
-            style={styles.profileImage}
-          />
+          <View style={styles.profileImageContainer}>
+            <Image
+              source={{ uri: user?.avatarUrl || 'https://via.placeholder.com/60' }}
+              style={styles.profileImage}
+            />
+          </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{user?.name || 'User'}</Text>
             <Text style={styles.profileEmail}>{user?.email || 'email@example.com'}</Text>
           </View>
           <TouchableOpacity style={styles.editProfileButton}>
-            <Text style={styles.editProfileText}>Edit Profile</Text>
+            <Text style={styles.editProfileText}>Edit</Text>
           </TouchableOpacity>
         </View>
 
         {/* Account Settings */}
         <SettingsSection 
           title="Account" 
-          icon={<MaterialIcons name="person-outline" size={24} color="#666" />}
+          icon={<MaterialIcons name="person-outline" size={24} color={COLORS.primary} />}
         >
           <SettingsItem title="Change Password" onPress={() => {}} />
           <SettingsItem title="Linked Accounts" onPress={() => {}} />
@@ -141,12 +170,12 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
         {/* Notifications */}
         <SettingsSection 
           title="Notifications" 
-          icon={<Ionicons name="notifications-outline" size={24} color="#666" />}
+          icon={<Ionicons name="notifications-outline" size={24} color={COLORS.primary} />}
         >
           <SettingsItem
             title="Push Notifications"
             rightElement={
-              <Switch
+              <CustomSwitch
                 value={pushNotifications}
                 onValueChange={setPushNotifications}
               />
@@ -155,7 +184,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
           <SettingsItem
             title="Email Notifications"
             rightElement={
-              <Switch
+              <CustomSwitch
                 value={emailNotifications}
                 onValueChange={setEmailNotifications}
               />
@@ -166,12 +195,12 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
         {/* Privacy & Security */}
         <SettingsSection 
           title="Privacy & Security" 
-          icon={<MaterialIcons name="security" size={24} color="#666" />}
+          icon={<MaterialIcons name="security" size={24} color={COLORS.primary} />}
         >
           <SettingsItem
             title="Two-Factor Authentication"
             rightElement={
-              <Switch
+              <CustomSwitch
                 value={twoFactorAuth}
                 onValueChange={setTwoFactorAuth}
               />
@@ -183,12 +212,12 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
         {/* App Preferences */}
         <SettingsSection 
           title="Preferences" 
-          icon={<Ionicons name="settings-outline" size={24} color="#666" />}
+          icon={<Ionicons name="settings-outline" size={24} color={COLORS.primary} />}
         >
           <SettingsItem
             title="Dark Mode"
             rightElement={
-              <Switch
+              <CustomSwitch
                 value={darkMode}
                 onValueChange={setDarkMode}
               />
@@ -201,7 +230,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
         {/* Help & Support */}
         <SettingsSection 
           title="Help & Support" 
-          icon={<MaterialIcons name="help-outline" size={24} color="#666" />}
+          icon={<MaterialIcons name="help-outline" size={24} color={COLORS.primary} />}
         >
           <SettingsItem title="FAQs" onPress={() => {}} />
           <SettingsItem title="Contact Support" onPress={() => {}} />
@@ -214,7 +243,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
             style={[styles.actionButton, styles.logoutButton]}
             onPress={handleLogout}
           >
-            <MaterialCommunityIcons name="logout" size={20} color="#fff" />
+            <MaterialCommunityIcons name="logout" size={20} color={COLORS.textLight} />
             <Text style={styles.actionButtonText}>Log Out</Text>
           </TouchableOpacity>
           
@@ -222,7 +251,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
             style={[styles.actionButton, styles.deleteButton]}
             onPress={handleDeleteAccount}
           >
-            <MaterialCommunityIcons name="delete" size={20} color="#fff" />
+            <MaterialCommunityIcons name="delete" size={20} color={COLORS.textLight} />
             <Text style={styles.actionButtonText}>Delete Account</Text>
           </TouchableOpacity>
         </View>
@@ -245,7 +274,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.background,
   },
   header: {
     flexDirection: 'row',
@@ -254,31 +283,49 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: COLORS.borderColor,
+    backgroundColor: COLORS.background,
   },
   backButton: {
     width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: COLORS.secondary,
   },
   scrollView: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: COLORS.borderColor,
+    backgroundColor: COLORS.background,
+  },
+  profileImageContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    padding: 2,
+    marginRight: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.backgroundAlt,
   },
   profileImage: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    marginRight: 15,
   },
   profileInfo: {
     flex: 1,
@@ -286,92 +333,112 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: COLORS.secondary,
+    marginBottom: 4,
   },
   profileEmail: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.gray,
   },
   editProfileButton: {
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#F0F0F0',
+    paddingHorizontal: 16,
+    backgroundColor: COLORS.primary,
     borderRadius: 20,
+    elevation: 3,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
   editProfileText: {
-    fontSize: 12,
-    color: '#333',
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textLight,
   },
   section: {
-    marginVertical: 10,
+    marginVertical: 12,
     paddingHorizontal: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 10,
+    color: COLORS.secondary,
   },
   sectionContent: {
-    backgroundColor: '#F9F9F9',
-    borderRadius: 10,
+    backgroundColor: COLORS.backgroundAlt,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
   },
   settingsItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 15,
+    paddingVertical: 16,
     paddingHorizontal: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: COLORS.borderColor,
   },
   settingsItemText: {
     fontSize: 16,
+    color: COLORS.secondary,
   },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    marginVertical: 20,
+    marginVertical: 24,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 20,
-    borderRadius: 10,
+    borderRadius: 12,
     flex: 1,
     marginHorizontal: 5,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   logoutButton: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: COLORS.secondary,
   },
   deleteButton: {
-    backgroundColor: '#FF6347',
+    backgroundColor: '#FF365E', // Darker pink for delete button
   },
   actionButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.textLight,
     marginLeft: 10,
     fontSize: 16,
+    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 20,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: COLORS.borderColor,
   },
   footerLink: {
-    color: '#666',
+    color: COLORS.primary,
     fontSize: 12,
+    fontWeight: '500',
   },
   version: {
-    color: '#999',
+    color: COLORS.gray,
     fontSize: 12,
   },
 });
