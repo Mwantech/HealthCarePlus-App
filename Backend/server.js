@@ -12,18 +12,18 @@ const adminRoute = require('./routes/adminRoute');
 const orderRoutes = require('./routes/orderRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const healthIssueRoutes = require('./routes/healthIssueRoutes');
-const telemedicineRoutes = require('./routes/telemedicineRoutes');
 const testKitRoutes = require('./routes/testKitRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const LoginRoutes = require('./routes/loginRoutes');
 const UsersLoginRoutes = require('./routes/UsersLoginRoutes');
 const SchedulingRoutes = require('./routes/SchedulingRoutes');
+const TelemedicineBookingRoutes = require('./routes/TelemedicineBookingRoutes');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:8081", "http://localhost:5173" ,"http://192.168.19.185:8081"],
+    origin: ["http://localhost:8081", "http://localhost:5173" ,"http://192.168.150.185:8081"],
     methods: ["GET", "POST", "PUT", "DELETE"]
   }
 });
@@ -60,10 +60,10 @@ app.use('/api/admin', authMiddleware, adminRoute(connection));
 app.use('/api', orderRoutes(connection, io));
 app.use('/api', doctorRoutes(connection));
 app.use('/api', healthIssueRoutes(connection));
-app.use('/api', telemedicineRoutes(connection));
 app.use('/api', testKitRoutes(connection));
 app.use('/api', appointmentRoutes(connection));
 app.use('/api', LoginRoutes(connection));
+app.use('/api', TelemedicineBookingRoutes(connection));
 app.use('/api', UsersLoginRoutes(connection));
 app.use('/api/scheduling', SchedulingRoutes(connection));
 

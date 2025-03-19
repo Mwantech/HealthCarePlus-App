@@ -3,7 +3,7 @@
 /**
  * Base configuration for API requests
  */
-export const BASE_URL = 'http://localhost:3001/api';
+export const BASE_URL = 'http://192.168.150.185:3001/api';
 
 /**
  * Interface for HTTP request options

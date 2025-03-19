@@ -97,11 +97,7 @@ export default function TabLayout() {
                   backgroundColor: colors.primary,
                 }
               ]}>
-                <Ionicons
-                  name="stethoscope"
-                  size={28}
-                  color="#FFFFFF"
-                />
+                <Text style={styles.askText}>Ask AI</Text>
               </View>
             ),
             tabBarLabel: ({ color }) => (
@@ -172,6 +168,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
+  },
+  askText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   tabBarLabel: {
     fontSize: 12,

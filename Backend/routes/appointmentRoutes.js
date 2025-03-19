@@ -46,50 +46,7 @@ module.exports = (connection) => {
     }
   });
 
-  // Create a new appointment
-  router.post('/appointments', async (req, res) => {
-    const { issues, doctorId, date, time, email, patientName } = req.body;
-
-    try {
-      // Fetch doctor's information
-      const [doctorRows] = await connection.promise().query(
-        'SELECT name, specialization, price FROM doctors WHERE id = ?',
-        [doctorId]
-      );
-
-      if (doctorRows.length === 0) {
-        return res.status(404).json({ success: false, error: 'Doctor not found' });
-      }
-
-      const doctor = doctorRows[0];
-
-      // Insert the appointment into the database
-      const [result] = await connection.promise().query(
-        'INSERT INTO appointments (issues, doctor_id, appointment_date, appointment_time, user_email, patient_name) VALUES (?, ?, ?, ?, ?, ?)',
-        [JSON.stringify(issues), doctorId, date, time, email, patientName]
-      );
-
-      const appointmentId = result.insertId;
-      const roomCode = Math.random().toString(36).substring(7).toUpperCase();
-
-      // Update the appointment with the room code
-      await connection.promise().query(
-        'UPDATE appointments SET room_code = ? WHERE id = ?',
-        [roomCode, appointmentId]
-      );
-
-      res.json({ 
-        success: true, 
-        roomCode, 
-        doctorName: doctor.name, 
-        specialization: doctor.specialization,
-        price: doctor.price 
-      });
-    } catch (error) {
-      console.error('Error creating appointment:', error);
-      res.status(500).json({ success: false, error: 'Internal server error' });
-    }
-  });
+ 
 
   // Get a specific appointment
   router.get('/appointments/:appointmentId', async (req, res) => {
