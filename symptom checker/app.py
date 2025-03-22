@@ -6,7 +6,7 @@ import os
 app = Flask(__name__)
 
 # Enable CORS for requests from localhost:8081
-CORS(app, resources={r"/*": {"origins": "http://192.168.150.185:8081"}})
+CORS(app, resources={r"/*": {"origins": "http://192.168.16.185:8081"}})
 
 # Initialize the symptom checker
 symptom_checker = SymptomChecker(model_dir='models')

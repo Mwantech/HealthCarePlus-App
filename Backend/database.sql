@@ -103,3 +103,44 @@ INSERT INTO doctors (name, speciality, experience, fee) VALUES
 ('Dr. Smith', 'General Practice', '10 years', 100.00),
 ('Dr. Johnson', 'Dermatology', '15 years', 150.00),
 ('Dr. Williams', 'Psychiatry', '12 years', 200.00);
+
+
+
+-- Update the appointments table to add payment tracking fields
+
+-- If the table already exists, alter it to add the needed columns
+ALTER TABLE appointments 
+ADD COLUMN payment_status ENUM('pending', 'completed', 'failed') NOT NULL DEFAULT 'pending',
+ADD COLUMN payment_method VARCHAR(50),
+ADD COLUMN checkout_request_id VARCHAR(100),
+ADD COLUMN merchant_request_id VARCHAR(100),
+ADD COLUMN transaction_id VARCHAR(100),
+ADD COLUMN payment_details JSON,
+ADD COLUMN payment_date TIMESTAMP NULL;
+
+-- If you're creating the table from scratch, here's the full schema
+CREATE TABLE IF NOT EXISTS appointments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  issues JSON NOT NULL,
+  doctor_id INT NOT NULL,
+  appointment_date DATE NOT NULL,
+  appointment_time TIME NOT NULL,
+  user_email VARCHAR(255) NOT NULL,
+  patient_name VARCHAR(255) NOT NULL,
+  room_code VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  payment_status ENUM('pending', 'completed', 'failed') NOT NULL DEFAULT 'pending',
+  payment_method VARCHAR(50),
+  checkout_request_id VARCHAR(100),
+  merchant_request_id VARCHAR(100),
+  transaction_id VARCHAR(100),
+  payment_details JSON,
+  payment_date TIMESTAMP NULL,
+  FOREIGN KEY (doctor_id) REFERENCES doctors(id)
+);
+
+-- Create an index to improve performance when querying by payment status
+CREATE INDEX idx_payment_status ON appointments (payment_status);
+
+-- Create an index for checkout request ID to improve M-Pesa callback matching
+CREATE INDEX idx_checkout_request_id ON appointments (checkout_request_id);

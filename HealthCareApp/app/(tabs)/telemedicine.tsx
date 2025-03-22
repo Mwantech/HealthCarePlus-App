@@ -3,9 +3,9 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   TextInput,
   ScrollView,
+  StyleSheet,
   Alert,
   Platform,
   SafeAreaView,
@@ -41,7 +41,7 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
   const [appointmentTime, setAppointmentTime] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('');
   const [paymentDetails, setPaymentDetails] = useState<string>('');
-  const [paymentStatus, setPaymentStatus] = useState<boolean>(false);
+  const [paymentStatus, setPaymentStatus] = useState<string>('pending');
   const [roomCode, setRoomCode] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [patientName, setPatientName] = useState<string>('');
@@ -49,13 +49,30 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [appointmentId, setAppointmentId] = useState<string>('');
+  const [checkoutRequestID, setCheckoutRequestID] = useState<string>('');
+  const [checkingPaymentStatus, setCheckingPaymentStatus] = useState<boolean>(false);
  
-
   const healthIssues = ['Common Cold', 'Allergies', 'Skin Conditions', 'Mental Health', 'Chronic Disease Management'];
 
   useEffect(() => {
     fetchDoctors();
   }, []);
+
+  // Poll payment status for M-Pesa
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    
+    if (paymentMethod === 'mpesa' && paymentStatus === 'pending' && appointmentId) {
+      intervalId = setInterval(() => {
+        checkPaymentStatus();
+      }, 5000); // Check every 5 seconds
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [paymentMethod, paymentStatus, appointmentId]);
 
   const fetchDoctors = async () => {
     try {
@@ -67,6 +84,33 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Error', 'Failed to fetch doctors');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkPaymentStatus = async () => {
+    if (checkingPaymentStatus || !appointmentId) return;
+    
+    try {
+      setCheckingPaymentStatus(true);
+      const response = await axios.get(`${BASE_URL}/payment-status/${appointmentId}`);
+      
+      if (response.data.success) {
+        const newStatus = response.data.paymentStatus;
+        setPaymentStatus(newStatus);
+        
+        if (newStatus === 'completed') {
+          // Payment is complete, fetch appointment details to get room code
+          const appointmentResponse = await axios.get(`${BASE_URL}/appointments/${appointmentId}`);
+          if (appointmentResponse.data.success) {
+            setRoomCode(appointmentResponse.data.appointment.room_code);
+            setStep(5); // Move to confirmation screen
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+    } finally {
+      setCheckingPaymentStatus(false);
     }
   };
 
@@ -105,9 +149,24 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
       });
 
       if (response.data.success) {
-        setPaymentStatus(true);
+        setPaymentStatus(response.data.paymentStatus);
         setRoomCode(response.data.roomCode);
-        setStep(5);
+        setAppointmentId(response.data.appointmentId);
+        
+        if (response.data.checkoutRequestID) {
+          setCheckoutRequestID(response.data.checkoutRequestID);
+        }
+        
+        // For M-Pesa, stay on the payment screen until confirmation
+        if (paymentMethod === 'mpesa' && response.data.paymentStatus === 'pending') {
+          Alert.alert(
+            'M-Pesa Payment',
+            'Please check your phone for the M-Pesa prompt and enter your PIN to complete payment.'
+          );
+        } else {
+          // For other payment methods or if payment already completed, proceed to confirmation
+          setStep(5);
+        }
       } else {
         Alert.alert('Error', 'Failed to create appointment');
       }
@@ -334,32 +393,103 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
                 ))}
               </View>
 
-              {paymentMethod && (
+
+              {paymentMethod === 'mpesa' ? (
+                <View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter M-Pesa Phone Number (e.g., 254XXXXXXXXX)"
+                    value={paymentDetails}
+                    onChangeText={(text) => {
+                      // Remove any non-numeric characters
+                      const numericText = text.replace(/[^0-9]/g, '');
+                      
+                      // Format as needed - ensure it starts with 254
+                      let formattedNumber = numericText;
+                      if (numericText.startsWith('0')) {
+                        formattedNumber = '254' + numericText.substring(1);
+                      } else if (!numericText.startsWith('254') && numericText.length > 0) {
+                        formattedNumber = '254' + numericText;
+                      }
+                      
+                      setPaymentDetails(formattedNumber);
+                    }}
+                    keyboardType="phone-pad"
+                    placeholderTextColor="#6c757d"
+                    maxLength={12} // Adjust based on expected length including the 254 prefix
+                  />
+                  <Text style={styles.helperText}>
+                    Format: 254XXXXXXXXX (9 digits after 254)
+                  </Text>
+                </View>
+              ) : paymentMethod === 'card' ? (
                 <TextInput
                   style={styles.input}
-                  placeholder={`Enter ${paymentMethod} details`}
+                  placeholder="Enter card number"
                   value={paymentDetails}
                   onChangeText={setPaymentDetails}
+                  keyboardType="number-pad"
                   placeholderTextColor="#6c757d"
-                  secureTextEntry={paymentMethod === 'card'}
+                  secureTextEntry
                 />
+              ) : paymentMethod === 'paypal' ? (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter PayPal email"
+                  value={paymentDetails}
+                  onChangeText={setPaymentDetails}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  placeholderTextColor="#6c757d"
+                />
+              ) : null}
+
+              {/* M-Pesa payment status section */}
+              {paymentMethod === 'mpesa' && appointmentId && paymentStatus === 'pending' && (
+                <View style={styles.mpesaStatusContainer}>
+                  <Text style={styles.mpesaStatusTitle}>M-Pesa Payment Status</Text>
+                  <View style={styles.mpesaStatusIndicator}>
+                    <ActivityIndicator color="#007AFF" size="small" />
+                    <Text style={styles.mpesaStatusText}>Waiting for payment confirmation...</Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.refreshButton}
+                    onPress={checkPaymentStatus}
+                    disabled={checkingPaymentStatus}
+                  >
+                    {checkingPaymentStatus ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <Text style={styles.refreshButtonText}>Refresh Status</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
 
-            <TouchableOpacity
-              style={[
-                styles.nextButton,
-                (!paymentDetails || !email || !patientName) && styles.disabledButton
-              ]}
-              onPress={handlePayment}
-              disabled={!paymentDetails || !email || !patientName || loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.nextButtonText}>Pay ${selectedDoctor?.price}</Text>
-              )}
-            </TouchableOpacity>
+            {!appointmentId ? (
+              <TouchableOpacity
+                style={[
+                  styles.nextButton,
+                  (!paymentDetails || !email || !patientName || !paymentMethod) && styles.disabledButton
+                ]}
+                onPress={handlePayment}
+                disabled={!paymentDetails || !email || !patientName || !paymentMethod || loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.nextButtonText}>Pay ${selectedDoctor?.price}</Text>
+                )}
+              </TouchableOpacity>
+            ) : paymentStatus === 'pending' ? (
+              <TouchableOpacity
+                style={styles.nextButton}
+                onPress={() => setStep(5)}
+              >
+                <Text style={styles.nextButtonText}>Continue to Confirmation</Text>
+              </TouchableOpacity>
+            ) : null}
           </ScrollView>
         );
 
@@ -371,6 +501,16 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.successIcon}>✓</Text>
               </View>
               <Text style={styles.successHeader}>Appointment Confirmed!</Text>
+              
+              <View style={styles.paymentStatusBadge} style={[
+                styles.paymentStatusBadge,
+                paymentStatus === 'completed' ? styles.paymentCompleted : styles.paymentPending
+              ]}>
+                <Text style={styles.paymentStatusText}>
+                  Payment: {paymentStatus === 'completed' ? 'Completed' : 'Pending'}
+                </Text>
+              </View>
+              
               <View style={styles.successDetails}>
                 <Text style={styles.successText}>Your appointment is scheduled with</Text>
                 <Text style={styles.successDoctorName}>Dr. {selectedDoctor?.name}</Text>
@@ -383,6 +523,21 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
                   Confirmation sent to {email}
                 </Text>
               </View>
+              
+              {paymentStatus === 'pending' && paymentMethod === 'mpesa' && (
+                <TouchableOpacity
+                  style={styles.checkPaymentButton}
+                  onPress={checkPaymentStatus}
+                  disabled={checkingPaymentStatus}
+                >
+                  {checkingPaymentStatus ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text style={styles.checkPaymentButtonText}>Check Payment Status</Text>
+                  )}
+                </TouchableOpacity>
+              )}
+              
               <TouchableOpacity
                 style={styles.videoButton}
                 onPress={() => navigation.navigate('VideoRoom', { roomCode })}
@@ -655,10 +810,6 @@ const styles = StyleSheet.create({
     color: '#000000', // Black
     fontWeight: '500',
   },
-  stepContainer: {
-    flex: 1,
-    padding: 16,
-  },
   
   content: {
     flex: 1,
@@ -767,6 +918,74 @@ const styles = StyleSheet.create({
   },
   videoButtonText: {
     color: '#ffffff', // White
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  mpesaStatusContainer: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  mpesaStatusTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 12,
+  },
+  mpesaStatusIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  mpesaStatusText: {
+    fontSize: 14,
+    color: '#666666',
+    marginLeft: 8,
+  },
+  refreshButton: {
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  refreshButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  
+  // For the payment status badge in the confirmation screen
+  paymentStatusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  paymentCompleted: {
+    backgroundColor: '#e6f7ee',
+  },
+  paymentPending: {
+    backgroundColor: '#fff9e6',
+  },
+  paymentStatusText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#28a745',
+  },
+  
+  // For the check payment button in the confirmation screen
+  checkPaymentButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  checkPaymentButtonText: {
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
   },
