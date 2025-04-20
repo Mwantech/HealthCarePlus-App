@@ -724,7 +724,258 @@
             ],
             "responses": "You may have Multiple Sclerosis (MS). It's a neurological disease that affects the central nervous system.<br>Recommended actions:<br>1. Consult a neurologist for diagnosis and treatment.<br>2. Medications and physical therapy can help manage MS symptoms and slow progression.",
             "Precaution":"To avoid multiple sclerosis:<br>1. Maintain a balanced diet and exercise regularly.<br>2. Manage stress.<br>3. Follow prescribed medications and treatments.<br>4. Get regular check-ups with a neurologist."
-        }
+        },
+        {
+            "tag": "Headache",
+            "patterns": ["Headache"],
+            "responses": "You may be experiencing a headache. Common causes include tension, dehydration, or lack of sleep.<br>Recommended actions:<br>1. Drink plenty of water.<br>2. Rest in a quiet, dark room.<br>3. Take over-the-counter pain relievers if needed.<br>4. Consult a doctor if headaches are severe or persistent.",
+            "Precaution": "To avoid headaches:<br>1. Stay hydrated.<br>2. Manage stress.<br>3. Maintain a regular sleep schedule.<br>4. Limit caffeine and alcohol intake."
+        },
+        {
+            "tag": "Sore Throat",
+            "patterns": ["Sore Throat"],
+            "responses": "You might have a sore throat, often caused by viral infections or allergies.<br>Recommended actions:<br>1. Gargle with warm salt water.<br>2. Stay hydrated.<br>3. Use throat lozenges or sprays.<br>4. Consult a doctor if symptoms persist or worsen.",
+            "Precaution": "To avoid sore throat:<br>1. Practice good hygiene.<br>2. Avoid smoking and polluted air.<br>3. Strengthen your immune system.<br>4. Stay away from allergens."
+        },
+        {
+            "tag": "Nausea",
+            "patterns": ["Nausea"],
+            "responses": "You may be experiencing nausea, which can result from various causes like indigestion or motion sickness.<br>Recommended actions:<br>1. Drink clear fluids.<br>2. Eat small, bland meals.<br>3. Avoid strong odors.<br>4. Consult a doctor if nausea is severe or persistent.",
+            "Precaution": "To avoid nausea:<br>1. Eat slowly and avoid overeating.<br>2. Avoid greasy or spicy foods.<br>3. Stay hydrated.<br>4. Manage stress."
+        },
+        {
+            "tag": "Dizziness",
+            "patterns": ["Dizziness"],
+            "responses": "You might be feeling dizzy, which can be caused by dehydration, low blood sugar, or inner ear issues.<br>Recommended actions:<br>1. Sit or lie down until the dizziness passes.<br>2. Drink water or eat a small snack.<br>3. Avoid sudden movements.<br>4. Consult a doctor if dizziness is frequent or severe.",
+            "Precaution": "To avoid dizziness:<br>1. Stay hydrated.<br>2. Eat regular meals.<br>3. Rise slowly from sitting or lying down.<br>4. Manage stress."
+        },
+        {
+            "tag": "Fatigue",
+            "patterns": ["Fatigue", "Tiredness", "Exhaustion"],
+            "responses": "You may be experiencing fatigue, which can result from lack of sleep, stress, or underlying health conditions.<br>Recommended actions:<br>1. Get adequate rest.<br>2. Maintain a balanced diet.<br>3. Exercise regularly.<br>4. Consult a doctor if fatigue is persistent.",
+            "Precaution": "To avoid fatigue:<br>1. Prioritize sleep.<br>2. Manage stress.<br>3. Stay active.<br>4. Eat a nutritious diet."
+        },
+        {
+            "tag": "Back Pain",
+            "patterns": ["Back Pain", "Backache", "Spinal Pain"],
+            "responses": "You might have back pain, often caused by muscle strain or poor posture.<br>Recommended actions:<br>1. Apply heat or ice to the affected area.<br>2. Practice gentle stretching.<br>3. Avoid heavy lifting.<br>4. Consult a doctor if pain is severe or persistent.",
+            "Precaution": "To avoid back pain:<br>1. Maintain good posture.<br>2. Exercise regularly.<br>3. Lift objects properly.<br>4. Use ergonomic furniture."
+        },
+        {
+            "tag": "Cough",
+            "patterns": ["Cough", "Coughing", "Dry Cough", "Wet Cough"],
+            "responses": "You may have a cough, which can be caused by colds, allergies, or irritants.<br>Recommended actions:<br>1. Stay hydrated.<br>2. Use cough drops or honey.<br>3. Avoid irritants like smoke.<br>4. Consult a doctor if the cough is severe or lasts more than a week.",
+            "Precaution": "To avoid cough:<br>1. Practice good hygiene.<br>2. Avoid smoking.<br>3. Stay away from allergens.<br>4. Keep your living space clean."
+        },
+        {
+            "tag": "Stomach Pain",
+            "patterns": ["Stomach Pain", "Abdominal Pain", "Stomach Ache", "Belly Pain"],
+            "responses": "You might be experiencing stomach pain, which can result from indigestion, gas, or infections.<br>Recommended actions:<br>1. Drink peppermint or ginger tea.<br>2. Avoid spicy or fatty foods.<br>3. Rest and apply a warm compress.<br>4. Consult a doctor if pain is severe or persistent.",
+            "Precaution": "To avoid stomach pain:<br>1. Eat a balanced diet.<br>2. Avoid overeating.<br>3. Stay hydrated.<br>4. Manage stress."
+        },
+        {
+            "tag": "Diarrhea",
+            "patterns": ["Diarrhea", "Loose Stools", "Watery Stool"],
+            "responses": "You may have diarrhea, often caused by infections or food intolerances.<br>Recommended actions:<br>1. Drink plenty of fluids to stay hydrated.<br>2. Eat bland foods like bananas or rice.<br>3. Avoid dairy and fatty foods.<br>4. Consult a doctor if diarrhea persists or is severe.",
+            "Precaution": "To avoid diarrhea:<br>1. Practice good hygiene.<br>2. Avoid contaminated food or water.<br>3. Eat a balanced diet.<br>4. Manage stress."
+        },
+        {
+            "tag": "Constipation",
+            "patterns": ["Constipation", "Difficulty Passing Stool", "Hard Stool"],
+            "responses": "You might be constipated, which can result from low fiber intake or dehydration.<br>Recommended actions:<br>1. Drink plenty of water.<br>2. Eat high-fiber foods.<br>3. Exercise regularly.<br>4. Consult a doctor if constipation is persistent.",
+            "Precaution": "To avoid constipation:<br>1. Eat a fiber-rich diet.<br>2. Stay hydrated.<br>3. Exercise regularly.<br>4. Establish a regular bathroom routine."
+        },
+        {
+            "tag": "Insomnia",
+            "patterns": ["Insomnia", "Can't Sleep", "Difficulty Sleeping", "Sleep Problems"],
+            "responses": "You may be experiencing insomnia, which can result from stress or poor sleep habits.<br>Recommended actions:<br>1. Maintain a regular sleep schedule.<br>2. Create a relaxing bedtime routine.<br>3. Avoid caffeine and screens before bed.<br>4. Consult a doctor if insomnia persists.",
+            "Precaution": "To avoid insomnia:<br>1. Stick to a sleep schedule.<br>2. Limit naps during the day.<br>3. Create a comfortable sleep environment.<br>4. Manage stress."
+        },
+        {
+            "tag": "Muscle Pain",
+            "patterns": ["Muscle Pain", "Muscle Ache", "Sore Muscles"],
+            "responses": "You might have muscle pain, often caused by overexertion or tension.<br>Recommended actions:<br>1. Rest the affected area.<br>2. Apply ice or heat.<br>3. Gently stretch or massage the muscles.<br>4. Consult a doctor if pain is severe or persistent.",
+            "Precaution": "To avoid muscle pain:<br>1. Warm up before exercise.<br>2. Stay hydrated.<br>3. Practice good posture.<br>4. Avoid overexertion."
+        },
+        {
+            "tag": "Fever",
+            "patterns": ["Fever", "High Temperature", "Running a Temperature"],
+            "responses": "You appear to have a fever, which is often a sign your body is fighting an infection.<br>Recommended actions:<br>1. Rest and stay hydrated.<br>2. Take appropriate fever reducers like acetaminophen if needed.<br>3. Use a cool compress on your forehead.<br>4. Consult a doctor if fever is high (above 102°F/39°C) or lasts more than 3 days.",
+            "Precaution": "To avoid fever:<br>1. Wash hands frequently.<br>2. Avoid close contact with sick individuals.<br>3. Stay up-to-date on vaccinations.<br>4. Maintain a healthy immune system through proper diet and sleep."
+        },
+        {
+            "tag": "Allergies",
+            "patterns": [
+                "Allergies",
+                "Sneezing, Itchy Eyes, Runny Nose",
+                "Skin Rash, Sneezing",
+                "Itchy Eyes, Runny Nose"
+            ],
+            "responses": "You might be experiencing allergies. Allergies are immune system reactions to allergens in the environment.<br>Recommended actions:<br>1. Identify and avoid allergens if possible.<br>2. Over-the-counter antihistamines may help relieve symptoms.<br>3. Consult an allergist for a comprehensive evaluation and treatment plan.",
+            "Precaution": "To avoid allergies:<br>1. Identify and avoid allergens.<br>2. Keep indoor environments clean and dust-free.<br>3. Take allergy medications as prescribed.<br>4. Consider allergy shots for long-term relief."
+        },
+        {
+            "tag": "Common Cold",
+            "patterns": ["Common Cold", "Cold", "Runny Nose and Cough", "Stuffy Nose, Sore Throat"],
+            "responses": "You likely have a common cold, which is a viral infection affecting your upper respiratory tract.<br>Recommended actions:<br>1. Get plenty of rest.<br>2. Stay hydrated with water, tea, or clear broths.<br>3. Use over-the-counter cold medications to relieve symptoms.<br>4. Consult a doctor if symptoms worsen or don't improve after a week.",
+            "Precaution": "To avoid common cold:<br>1. Wash hands frequently.<br>2. Avoid close contact with sick people.<br>3. Don't share personal items like towels or utensils.<br>4. Boost your immune system with proper nutrition and sleep."
+        },
+        {
+            "tag": "Anxiety",
+            "patterns": ["Anxiety", "Feeling Anxious", "Nervousness", "Worry", "Panic"],
+            "responses": "You may be experiencing anxiety, which can manifest as worry, nervousness, or physical symptoms.<br>Recommended actions:<br>1. Practice deep breathing exercises.<br>2. Try mindfulness meditation.<br>3. Get regular physical activity.<br>4. Consider speaking with a mental health professional if anxiety interferes with daily life.",
+            "Precaution": "To avoid anxiety:<br>1. Establish a regular self-care routine.<br>2. Limit caffeine and alcohol.<br>3. Prioritize quality sleep.<br>4. Build a support network of friends and family."
+        },
+        {
+            "tag": "Eye Strain",
+            "patterns": ["Eye Strain", "Tired Eyes", "Eye Fatigue", "Blurry Vision"],
+            "responses": "You might be experiencing eye strain, often caused by prolonged screen time or reading.<br>Recommended actions:<br>1. Follow the 20-20-20 rule: every 20 minutes, look at something 20 feet away for 20 seconds.<br>2. Adjust screen brightness and contrast.<br>3. Use artificial tears if your eyes feel dry.<br>4. Consult an eye doctor if symptoms persist.",
+            "Precaution": "To avoid eye strain:<br>1. Position screens at an appropriate distance and angle.<br>2. Ensure proper lighting in your workspace.<br>3. Take regular breaks from screen time.<br>4. Consider computer glasses if you spend many hours on devices."
+        },
+        {
+            "tag": "Sunburn",
+            "patterns": ["Sunburn", "Sun Damage", "Red Skin from Sun", "Burned Skin"],
+            "responses": "You appear to have a sunburn, which is skin damage from ultraviolet (UV) radiation.<br>Recommended actions:<br>1. Take cool baths or apply cool compresses.<br>2. Use aloe vera gel or moisturizers.<br>3. Take pain relievers if needed for discomfort.<br>4. Seek medical attention if you have severe blistering or symptoms of heat stroke.",
+            "Precaution": "To avoid sunburn:<br>1. Apply broad-spectrum sunscreen with SPF 30+ regularly.<br>2. Wear protective clothing, hats, and sunglasses.<br>3. Seek shade during peak sun hours (10am-4pm).<br>4. Be extra cautious near water, snow, and sand which reflect UV rays."
+        },
+        {
+            "tag": "Migraine",
+            "patterns": ["Migraine", "Severe Headache", "Headache with Aura", "Throbbing Headache"],
+            "responses": "You may be experiencing a migraine, which is more severe than a typical headache and often comes with additional symptoms.<br>Recommended actions:<br>1. Rest in a quiet, dark room.<br>2. Apply cold compresses to your head or neck.<br>3. Take migraine-specific medications if prescribed.<br>4. Consult a doctor for proper diagnosis and treatment plan.",
+            "Precaution": "To avoid migraines:<br>1. Identify and avoid personal triggers (certain foods, stress, etc.).<br>2. Maintain regular sleep and meal schedules.<br>3. Stay hydrated and manage stress.<br>4. Consider preventive medications if migraines are frequent."
+        },
+        {
+            "tag": "Depression",
+            "patterns": ["Depression", "Feeling Sad", "Loss of Interest", "Low Mood", "Hopelessness"],
+            "responses": "You may be experiencing symptoms of depression, which is a medical condition affecting how you feel, think, and act.<br>Recommended actions:<br>1. Reach out to a trusted friend or family member.<br>2. Speak with a mental health professional for proper diagnosis and treatment.<br>3. Try to maintain regular physical activity and healthy eating habits.<br>4. Consider therapy, medication, or a combination as recommended by a professional.",
+            "Precaution": "To manage depression:<br>1. Build and maintain supportive relationships.<br>2. Develop healthy coping skills for stress.<br>3. Practice self-care regularly.<br>4. Follow treatment plans as prescribed by healthcare providers."
+        },
+        {
+            "tag": "Nasal Congestion",
+            "patterns": ["Stuffy Nose", "Blocked Nose", "Nasal Congestion"],
+            "responses": "You may be experiencing nasal congestion, often caused by colds or allergies.<br>Recommended actions:<br>1. Use a saline nasal spray.<br>2. Stay hydrated.<br>3. Use a humidifier.<br>4. Consult a doctor if congestion persists.",
+            "Precaution": "To avoid nasal congestion:<br>1. Avoid allergens.<br>2. Maintain good hygiene.<br>3. Use nasal rinses regularly.<br>4. Avoid smoking and pollutants."
+          },
+          {
+            "tag": "Heart Palpitations",
+            "patterns": ["Heart Palpitations", "Rapid Heartbeat", "Fluttering in Chest"],
+            "responses": "You may be experiencing heart palpitations, which can be caused by stress, caffeine, or underlying conditions.<br>Recommended actions:<br>1. Avoid stimulants like caffeine.<br>2. Practice deep breathing.<br>3. Monitor your pulse.<br>4. Seek medical attention if persistent.",
+            "Precaution": "To avoid palpitations:<br>1. Limit caffeine and alcohol.<br>2. Manage anxiety and stress.<br>3. Sleep well.<br>4. Avoid certain medications that trigger palpitations."
+          },
+          {
+            "tag": "Shortness of Breath",
+            "patterns": ["Shortness of Breath", "Breathlessness", "Difficulty Breathing"],
+            "responses": "You might be experiencing shortness of breath, which can be linked to asthma, anxiety, or heart issues.<br>Recommended actions:<br>1. Sit upright and relax.<br>2. Use prescribed inhalers.<br>3. Practice breathing exercises.<br>4. Call a doctor if symptoms are severe.",
+            "Precaution": "To avoid breathlessness:<br>1. Avoid allergens and pollutants.<br>2. Exercise moderately.<br>3. Manage weight and stress.<br>4. Follow treatment for underlying conditions."
+          },
+          {
+            "tag": "Itchy Skin",
+            "patterns": ["Itchy Skin", "Skin Itching", "Pruritus"],
+            "responses": "You may have itchy skin, which could be caused by dryness, allergies, or skin conditions.<br>Recommended actions:<br>1. Moisturize regularly.<br>2. Avoid hot showers and harsh soaps.<br>3. Use anti-itch creams.<br>4. See a dermatologist if persistent.",
+            "Precaution": "To avoid itchy skin:<br>1. Keep skin hydrated.<br>2. Use fragrance-free skincare.<br>3. Avoid known allergens.<br>4. Wear loose, breathable clothing."
+          },
+          {
+            "tag": "Frequent Urination",
+            "patterns": ["Frequent Urination", "Peeing Often", "Urgent Urination"],
+            "responses": "Frequent urination can be caused by infections, diabetes, or caffeine intake.<br>Recommended actions:<br>1. Limit caffeine and alcohol.<br>2. Stay hydrated but monitor fluid intake.<br>3. Get tested for urinary tract infections or diabetes.<br>4. Consult a doctor if persistent.",
+            "Precaution": "To avoid frequent urination:<br>1. Avoid bladder irritants.<br>2. Strengthen pelvic muscles.<br>3. Control blood sugar levels.<br>4. Treat urinary infections promptly."
+          },
+          {
+            "tag": "Joint Swelling",
+            "patterns": ["Swollen Joints", "Joint Inflammation", "Puffy Joints"],
+            "responses": "Joint swelling may be due to arthritis, injury, or infection.<br>Recommended actions:<br>1. Rest the affected joint.<br>2. Apply ice and compression.<br>3. Take anti-inflammatory medications.<br>4. See a doctor for evaluation.",
+            "Precaution": "To avoid joint swelling:<br>1. Avoid repetitive strain.<br>2. Stay active but avoid overuse.<br>3. Eat an anti-inflammatory diet.<br>4. Manage arthritis and autoimmune conditions."
+          },
+          {
+            "tag": "Numbness",
+            "patterns": ["Numbness", "Tingling Sensation", "Loss of Sensation"],
+            "responses": "You might be experiencing numbness, often linked to nerve compression or poor circulation.<br>Recommended actions:<br>1. Change positions and move affected areas.<br>2. Avoid tight clothing.<br>3. Consult a doctor if frequent or spreading.",
+            "Precaution": "To avoid numbness:<br>1. Maintain good posture.<br>2. Stretch regularly.<br>3. Control diabetes and other conditions.<br>4. Avoid sitting in one position for long periods."
+          },
+          {
+            "tag": "Ear Pain",
+            "patterns": ["Ear Pain", "Earache", "Pain in Ear"],
+            "responses": "You may have ear pain, which can result from infections, pressure changes, or injury.<br>Recommended actions:<br>1. Apply a warm compress.<br>2. Take over-the-counter painkillers.<br>3. Avoid inserting objects in the ear.<br>4. Visit a doctor if it lasts more than a day.",
+            "Precaution": "To avoid ear pain:<br>1. Keep ears clean and dry.<br>2. Avoid loud noise exposure.<br>3. Protect ears in flights and swimming.<br>4. Avoid inserting cotton swabs deeply."
+          },
+          {
+            "tag": "Cold Hands and Feet",
+            "patterns": ["Cold Hands", "Cold Feet", "Chilly Extremities"],
+            "responses": "Cold hands and feet may result from poor circulation or cold exposure.<br>Recommended actions:<br>1. Warm up with gloves and socks.<br>2. Exercise to improve circulation.<br>3. Monitor for symptoms of Raynaud’s or thyroid issues.",
+            "Precaution": "To avoid cold hands and feet:<br>1. Stay warm in cold environments.<br>2. Don't smoke.<br>3. Exercise regularly.<br>4. Manage blood circulation conditions."
+          },
+          {
+            "tag": "Dry Mouth",
+            "patterns": ["Dry Mouth", "Thirsty", "Sticky Mouth"],
+            "responses": "You may have dry mouth, which can be caused by dehydration, medications, or medical conditions.<br>Recommended actions:<br>1. Sip water frequently.<br>2. Use sugar-free gum or lozenges.<br>3. Avoid caffeine and alcohol.<br>4. See a dentist if chronic.",
+            "Precaution": "To avoid dry mouth:<br>1. Stay hydrated.<br>2. Use alcohol-free mouthwash.<br>3. Avoid salty and spicy foods.<br>4. Manage any underlying conditions."
+          },
+          {
+            "tag": "Sinusitis",
+            "patterns": ["Sinus pain", "Nasal congestion", "Headache"],
+            "responses": "You may have sinusitis, an inflammation of the sinuses often caused by infection or allergies.<br>Recommended actions:<br>1. Use a saline nasal spray or rinse.<br>2. Apply warm compresses to relieve pain.<br>3. Take over-the-counter decongestants if needed.<br>4. Consult a doctor if symptoms persist beyond 10 days.",
+            "Precaution": "To avoid sinusitis:<br>1. Treat allergies promptly.<br>2. Stay hydrated.<br>3. Avoid cigarette smoke.<br>4. Use a humidifier in dry environments."
+          },
+          {
+            "tag": "Pink Eye",
+            "patterns": ["Red eyes", "Eye discharge", "Itching"],
+            "responses": "You might have pink eye (conjunctivitis), which can be viral, bacterial, or allergic.<br>Recommended actions:<br>1. Avoid touching or rubbing your eyes.<br>2. Use clean, warm compresses for relief.<br>3. Wash hands frequently to prevent spreading.<br>4. See a doctor if symptoms worsen or persist.",
+            "Precaution": "To avoid pink eye:<br>1. Wash hands often.<br>2. Avoid sharing towels or makeup.<br>3. Remove contact lenses if irritated.<br>4. Keep allergens away from eyes."
+          },
+          {
+            "tag": "Acid Reflux",
+            "patterns": ["Heartburn", "Regurgitation", "Chest discomfort"],
+            "responses": "You may be experiencing acid reflux (GERD), where stomach acid flows back into the esophagus.<br>Recommended actions:<br>1. Avoid spicy, fatty, or acidic foods.<br>2. Eat smaller meals and avoid lying down after eating.<br>3. Elevate the head of your bed.<br>4. Consult a doctor if symptoms are frequent or severe.",
+            "Precaution": "To avoid acid reflux:<br>1. Maintain a healthy weight.<br>2. Limit caffeine and alcohol.<br>3. Avoid late-night meals.<br>4. Quit smoking."
+          },
+          {
+            "tag": "UTI",
+            "patterns": ["Burning urination", "Cloudy urine"],
+            "responses": "You may have a urinary tract infection (UTI).<br>Recommended actions:<br>1. Drink plenty of water.<br>2. Avoid caffeine and alcohol.<br>3. Take prescribed antibiotics if diagnosed.<br>4. See a doctor if symptoms worsen.",
+            "Precaution": "To avoid UTIs:<br>1. Wipe front to back.<br>2. Urinate after intercourse.<br>3. Stay hydrated.<br>4. Avoid holding urine for long periods."
+          },
+          {
+            "tag": "Dehydration",
+            "patterns": ["Dry mouth", "Dizziness", "Dark urine"],
+            "responses": "You may be dehydrated, which can lead to serious complications.<br>Recommended actions:<br>1. Drink water or oral rehydration solutions.<br>2. Avoid sugary or caffeinated drinks.<br>3. Rest in a cool place.<br>4. Seek medical help if symptoms are severe (e.g., confusion, rapid heartbeat).",
+            "Precaution": "To avoid dehydration:<br>1. Drink fluids regularly, especially in heat.<br>2. Monitor urine color (pale yellow is ideal).<br>3. Eat water-rich fruits and vegetables.<br>4. Limit alcohol and caffeine."
+          },
+          {
+            "tag": "Seasonal Allergies",
+            "patterns": ["Sneezing", "Itchy eyes", "Runny nose"],
+            "responses": "You might have seasonal allergies (hay fever).<br>Recommended actions:<br>1. Use antihistamines or nasal sprays.<br>2. Keep windows closed during high pollen seasons.<br>3. Shower after outdoor exposure.<br>4. Consult an allergist if symptoms persist.",
+            "Precaution": "To avoid seasonal allergies:<br>1. Check pollen forecasts.<br>2. Wear sunglasses outdoors.<br>3. Use air purifiers indoors.<br>4. Wash bedding frequently."
+          },
+          {
+            "tag": "Ear Infection",
+            "patterns": ["Ear pain", "Hearing loss", "Fluid drainage"],
+            "responses": "You may have an ear infection, common in children but possible in adults.<br>Recommended actions:<br>1. Apply a warm compress for pain relief.<br>2. Avoid inserting objects into the ear.<br>3. Take pain relievers if needed.<br>4. See a doctor if symptoms worsen or persist.",
+            "Precaution": "To avoid ear infections:<br>1. Keep ears dry after swimming.<br>2. Treat colds/allergies promptly.<br>3. Avoid smoking.<br>4. Get vaccinated (e.g., flu, pneumococcal)."
+          },
+          {
+            "tag": "Heat Exhaustion",
+            "patterns": ["Excessive sweating", "Weakness", "Nausea"],
+            "responses": "You might be experiencing heat exhaustion due to overheating.<br>Recommended actions:<br>1. Move to a cooler place.<br>2. Drink cool water or sports drinks.<br>3. Loosen clothing and rest.<br>4. Seek medical help if symptoms worsen (e.g., fainting, confusion).",
+            "Precaution": "To avoid heat exhaustion:<br>1. Stay hydrated in hot weather.<br>2. Wear lightweight, loose clothing.<br>3. Avoid strenuous activity during peak heat.<br>4. Take breaks in shade or AC."
+          },
+          {
+            "tag": "Food Poisoning",
+            "patterns": ["Vomiting", "Diarrhea", "Stomach cramps"],
+            "responses": "You may have food poisoning caused by contaminated food.<br>Recommended actions:<br>1. Stay hydrated with small sips of water or electrolyte solutions.<br>2. Avoid solid foods until vomiting stops.<br>3. Rest and monitor symptoms.<br>4. Seek medical help if severe (e.g., blood in stool, high fever).",
+            "Precaution": "To avoid food poisoning:<br>1. Cook meat thoroughly.<br>2. Wash hands before handling food.<br>3. Store food at safe temperatures.<br>4. Avoid expired or suspicious food."
+          },
+          {
+            "tag": "Sprained Ankle",
+            "patterns": ["Ankle pain", "Swelling", "Difficulty walking"],
+            "responses": "You might have a sprained ankle due to ligament injury.<br>Recommended actions:<br>1. Rest and avoid putting weight on it.<br>2. Apply ice for 15-20 minutes every 2 hours.<br>3. Use compression bandages.<br>4. Elevate the foot to reduce swelling.",
+            "Precaution": "To avoid ankle sprains:<br>1. Wear supportive shoes.<br>2. Warm up before exercise.<br>3. Strengthen ankle muscles.<br>4. Be cautious on uneven surfaces."
+          },
+          {
+            "tag": "Dry Mouth",
+            "patterns": ["Dry Mouth", "Thirsty", "Sticky Mouth"],
+            "responses": "You may have dry mouth, which can be caused by dehydration, medications, or medical conditions.<br>Recommended actions:<br>1. Sip water frequently.<br>2. Use sugar-free gum or lozenges.<br>3. Avoid caffeine and alcohol.<br>4. See a dentist if chronic.",
+            "Precaution": "To avoid dry mouth:<br>1. Stay hydrated.<br>2. Use alcohol-free mouthwash.<br>3. Avoid salty and spicy foods.<br>4. Manage any underlying conditions."
+          }
     ]
 }
     

@@ -11,7 +11,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
 
 class SymptomCheckerTrainer:
-    def __init__(self, data_path: str = 'data/symptom_intents.json', model_dir: str = 'models'):
+    def __init__(self, data_path: str = '../data/symptom_intents.json', model_dir: str = '../models'):
         """
         Initialize the trainer for the symptom checker model
         

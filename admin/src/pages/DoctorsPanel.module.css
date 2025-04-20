@@ -1,0 +1,163 @@
+.panelContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 2.2rem;
+  color: #2c3e50;
+  font-weight: 600;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 1.5rem;
+  color: #3498db;
+  margin: 1rem 0 2rem;
+  font-weight: 500;
+}
+
+.noAppointments {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.appointmentsTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.appointmentsTable thead {
+  background-color: #3498db;
+  color: white;
+}
+
+.appointmentsTable th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 500;
+}
+
+.appointmentsTable tbody tr {
+  transition: background-color 0.2s;
+}
+
+.appointmentsTable tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.appointmentsTable tbody tr:hover {
+  background-color: #e8f4fc;
+}
+
+.appointmentsTable td {
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  color: #34495e;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.2rem;
+  color: #7f8c8d;
+}
+
+.error {
+  padding: 1.5rem;
+  background-color: #fee;
+  color: #e74c3c;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border-left: 4px solid #e74c3c;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.statusPending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.statusConfirmed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.statusCancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.actionButton {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.buttonPrimary {
+  background-color: #3498db;
+  color: white;
+}
+
+.buttonPrimary:hover {
+  background-color: #2980b9;
+}
+
+.buttonDanger {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.buttonDanger:hover {
+  background-color: #c0392b;
+}
+
+@media (max-width: 768px) {
+  .panelContainer {
+    padding: 1rem;
+  }
+  
+  .appointmentsTable {
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .title {
+    font-size: 1.8rem;
+  }
+  
+  .subtitle {
+    font-size: 1.3rem;
+  }
+}

@@ -37,7 +37,7 @@ interface ChatResponse {
     [key: string]: any;
 }
 
-const API_URL = 'http://192.168.16.185:5000/api';
+const API_URL = 'http://192.168.35.185:5000/api';
 
 // New color scheme: black, pink, white
 const CustomColors = {

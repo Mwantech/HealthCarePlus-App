@@ -6,3 +6,4 @@ required_entities.pkl
 responses.pkl
 vectorizer.pkl
 _pychache_
+.qodo

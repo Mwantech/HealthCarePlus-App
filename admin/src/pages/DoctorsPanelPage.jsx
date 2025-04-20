@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import './DoctorsPanel.css';
+import styles from './DoctorsPanel.module.css';
 
 const DoctorsPanelPage = ({ doctorId: propDoctorId }) => {
   const [appointments, setAppointments] = useState([]);
@@ -46,17 +46,37 @@ const DoctorsPanelPage = ({ doctorId: propDoctorId }) => {
     fetchAppointments();
   }, [effectiveDoctorId, navigate]);
 
-  if (loading) return <div className="doctors-panel">Loading...</div>;
-  if (error) return <div className="doctors-panel">Error: {error}</div>;
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  if (loading) return (
+    <div className={styles.panelContainer}>
+      <div className={styles.loading}>Loading appointments...</div>
+    </div>
+  );
+
+  if (error) return (
+    <div className={styles.panelContainer}>
+      <div className={styles.error}>{error}</div>
+    </div>
+  );
 
   return (
-    <div className="doctors-panel">
-      <h1>Doctors Panel</h1>
-      <h2>Your Appointments</h2>
+    <div className={styles.panelContainer}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Doctor's Dashboard</h1>
+      </div>
+      
+      <h2 className={styles.subtitle}>Your Appointments</h2>
+      
       {appointments.length === 0 ? (
-        <p className="no-appointments">No appointments scheduled.</p>
+        <div className={styles.noAppointments}>
+          No appointments scheduled. Check back later!
+        </div>
       ) : (
-        <table className="appointments-table">
+        <table className={styles.appointmentsTable}>
           <thead>
             <tr>
               <th>Date</th>
@@ -70,12 +90,16 @@ const DoctorsPanelPage = ({ doctorId: propDoctorId }) => {
           <tbody>
             {appointments.map((appointment, index) => (
               <tr key={index}>
-                <td className="appointment-date">{appointment.date}</td>
-                <td className="appointment-time">{appointment.time}</td>
-                <td className="patient-name">{appointment.patientName}</td>
-                <td className="patient-email">{appointment.userEmail}</td>
-                <td className="room-code">{appointment.roomCode}</td>
-                <td className="issues">{appointment.issues}</td>
+                <td>{formatDate(appointment.date)}</td>
+                <td>{appointment.time}</td>
+                <td>{appointment.patientName}</td>
+                <td>{appointment.userEmail}</td>
+                <td>
+                  <span className={styles.statusBadge}>
+                    {appointment.roomCode || 'Not assigned'}
+                  </span>
+                </td>
+                <td>{appointment.issues || 'Not specified'}</td>
               </tr>
             ))}
           </tbody>

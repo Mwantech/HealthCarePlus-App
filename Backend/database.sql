@@ -144,3 +144,16 @@ CREATE INDEX idx_payment_status ON appointments (payment_status);
 
 -- Create an index for checkout request ID to improve M-Pesa callback matching
 CREATE INDEX idx_checkout_request_id ON appointments (checkout_request_id);
+
+
+ALTER TABLE orders ADD COLUMN total_amount DECIMAL(10,2) NOT NULL DEFAULT 0;
+
+ALTER TABLE order_items ADD COLUMN price DECIMAL(10,2) NOT NULL DEFAULT 0;
+
+ALTER TABLE orders 
+ADD COLUMN checkout_request_id VARCHAR(255) NULL,
+ADD COLUMN merchant_request_id VARCHAR(255) NULL;
+
+ALTER TABLE orders 
+ADD COLUMN transaction_id VARCHAR(50) NULL,
+ADD COLUMN updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;

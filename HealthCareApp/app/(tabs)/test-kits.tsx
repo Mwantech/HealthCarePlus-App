@@ -11,11 +11,13 @@ import {
   Alert,
   StatusBar,
   Platform,
+  Modal,
   Dimensions,
 } from 'react-native';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { BASE_URL } from '../api/api';
+import { OrderStorageService } from '../services/OrderStorageService';
 
 // Types
 interface TestKit {
@@ -45,6 +47,11 @@ interface PaymentDetails {
 
 interface OrderDetails {
   orderNumber: string;
+  paymentMethod: string;
+  status: string;
+  checkoutRequestID?: string;
+  merchantRequestID?: string;
+  totalAmount: number;
 }
 
 interface StepIndicator {
@@ -120,22 +127,27 @@ const ModernHeader = ({
 const CustomButton = ({ 
   onPress, 
   title, 
-  variant = 'primary' 
+  variant = 'primary',
+  disabled = false
 }: { 
   onPress: () => void; 
   title: string; 
   variant?: 'primary' | 'secondary';
+  disabled?: boolean;
 }) => (
   <TouchableOpacity
     onPress={onPress}
+    disabled={disabled}
     style={[
       styles.button,
-      variant === 'secondary' && styles.buttonSecondary
+      variant === 'secondary' && styles.buttonSecondary,
+      disabled && styles.buttonDisabled
     ]}
   >
     <Text style={[
       styles.buttonText,
-      variant === 'secondary' && styles.buttonTextSecondary
+      variant === 'secondary' && styles.buttonTextSecondary,
+      disabled && styles.buttonTextDisabled
     ]}>
       {title}
     </Text>
@@ -190,6 +202,11 @@ const TestKitSelection = ({
             <View style={styles.kitInfo}>
               <Text style={styles.kitName}>{kit.name}</Text>
               <Text style={styles.kitPrice}>${kit.price}</Text>
+              {kit.description && (
+                <Text style={styles.kitDescription} numberOfLines={2}>
+                  {kit.description}
+                </Text>
+              )}
             </View>
             {selectedKits.some((k) => k.id === kit.id) && (
               <View style={styles.quantityContainer}>
@@ -229,11 +246,13 @@ const TestKitSelection = ({
         <CustomButton 
           title="Review Order" 
           onPress={nextStep}
+          disabled={selectedKits.length === 0}
         />
       </View>
     </ScrollView>
   );
 };
+
 const ReviewAndConfirm = ({
   selectedKits,
   prevStep,
@@ -292,64 +311,114 @@ const ShippingInformation = ({
   setShippingInfo: (info: ShippingInfo) => void;
   prevStep: () => void;
   nextStep: () => void;
-}) => (
-  <View style={styles.stepContainer}>
-    <ScrollView style={styles.scrollView}>
-      <View style={styles.formCard}>
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Delivery Address</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your full address"
-            value={shippingInfo.address}
-            onChangeText={(text) =>
-              setShippingInfo({ ...shippingInfo, address: text })
-            }
-            multiline
-          />
-        </View>
+}) => {
+  const [formErrors, setFormErrors] = useState({
+    address: '',
+    phone: '',
+    email: ''
+  });
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Phone Number</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your phone number"
-            keyboardType="phone-pad"
-            value={shippingInfo.phone}
-            onChangeText={(text) =>
-              setShippingInfo({ ...shippingInfo, phone: text })
-            }
-          />
-        </View>
+  const validateForm = () => {
+    let isValid = true;
+    const errors = {
+      address: '',
+      phone: '',
+      email: ''
+    };
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Email Address</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={shippingInfo.email}
-            onChangeText={(text) =>
-              setShippingInfo({ ...shippingInfo, email: text })
-            }
-          />
+    if (!shippingInfo.address.trim()) {
+      errors.address = 'Address is required';
+      isValid = false;
+    }
+
+    if (!shippingInfo.phone.trim()) {
+      errors.phone = 'Phone number is required';
+      isValid = false;
+    } else if (!/^\d{10,15}$/.test(shippingInfo.phone.replace(/\D/g, ''))) {
+      errors.phone = 'Please enter a valid phone number';
+      isValid = false;
+    }
+
+    if (!shippingInfo.email.trim()) {
+      errors.email = 'Email is required';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(shippingInfo.email)) {
+      errors.email = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
+  const handleNext = () => {
+    if (validateForm()) {
+      nextStep();
+    }
+  };
+
+  return (
+    <View style={styles.stepContainer}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.formCard}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Delivery Address</Text>
+            <TextInput
+              style={[styles.input, formErrors.address ? styles.inputError : null]}
+              placeholder="Enter your full address"
+              value={shippingInfo.address}
+              onChangeText={(text) =>
+                setShippingInfo({ ...shippingInfo, address: text })
+              }
+              multiline
+            />
+            {formErrors.address ? <Text style={styles.errorText}>{formErrors.address}</Text> : null}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Phone Number</Text>
+            <TextInput
+              style={[styles.input, formErrors.phone ? styles.inputError : null]}
+              placeholder="Enter your phone number"
+              keyboardType="phone-pad"
+              value={shippingInfo.phone}
+              onChangeText={(text) =>
+                setShippingInfo({ ...shippingInfo, phone: text })
+              }
+            />
+            {formErrors.phone ? <Text style={styles.errorText}>{formErrors.phone}</Text> : null}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Email Address</Text>
+            <TextInput
+              style={[styles.input, formErrors.email ? styles.inputError : null]}
+              placeholder="Enter your email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={shippingInfo.email}
+              onChangeText={(text) =>
+                setShippingInfo({ ...shippingInfo, email: text })
+              }
+            />
+            {formErrors.email ? <Text style={styles.errorText}>{formErrors.email}</Text> : null}
+          </View>
         </View>
+      </ScrollView>
+      <View style={styles.buttonContainer}>
+        <CustomButton 
+          title="Back" 
+          onPress={prevStep} 
+          variant="secondary" 
+        />
+        <CustomButton 
+          title="Continue to Payment" 
+          onPress={handleNext} 
+        />
       </View>
-    </ScrollView>
-    <View style={styles.buttonContainer}>
-      <CustomButton 
-        title="Back" 
-        onPress={prevStep} 
-        variant="secondary" 
-      />
-      <CustomButton 
-        title="Continue to Payment" 
-        onPress={nextStep} 
-      />
     </View>
-  </View>
-);
+  );
+};
 
 const PaymentOptions = ({
   prevStep,
@@ -362,10 +431,18 @@ const PaymentOptions = ({
     paymentMethod: string,
     paymentDetails: PaymentDetails,
     orderNumber: string
-  ) => void;
+  ) => Promise<OrderDetails | null>;
 }) => {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails>({
+    cardNumber: '',
+    expiry: '',
+    cvv: '',
+    mpesaNumber: '',
+    paypalEmail: '',
+  });
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [formErrors, setFormErrors] = useState({
     cardNumber: '',
     expiry: '',
     cvv: '',
@@ -377,14 +454,101 @@ const PaymentOptions = ({
     return 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
   };
 
-  const handleSubmit = () => {
+  const validateForm = () => {
+    let isValid = true;
+    const errors = {
+      cardNumber: '',
+      expiry: '',
+      cvv: '',
+      mpesaNumber: '',
+      paypalEmail: '',
+    };
+
+    if (paymentMethod === 'Credit Card') {
+      if (!paymentDetails.cardNumber.trim()) {
+        errors.cardNumber = 'Card number is required';
+        isValid = false;
+      } else if (!/^\d{16}$/.test(paymentDetails.cardNumber.replace(/\s/g, ''))) {
+        errors.cardNumber = 'Please enter a valid 16-digit card number';
+        isValid = false;
+      }
+
+      if (!paymentDetails.expiry.trim()) {
+        errors.expiry = 'Expiry date is required';
+        isValid = false;
+      } else if (!/^\d{2}\/\d{2}$/.test(paymentDetails.expiry)) {
+        errors.expiry = 'Use format MM/YY';
+        isValid = false;
+      }
+
+      if (!paymentDetails.cvv.trim()) {
+        errors.cvv = 'CVV is required';
+        isValid = false;
+      } else if (!/^\d{3,4}$/.test(paymentDetails.cvv)) {
+        errors.cvv = 'Invalid CVV';
+        isValid = false;
+      }
+    } else if (paymentMethod === 'PayPal') {
+      if (!paymentDetails.paypalEmail.trim()) {
+        errors.paypalEmail = 'PayPal email is required';
+        isValid = false;
+      } else if (!/\S+@\S+\.\S+/.test(paymentDetails.paypalEmail)) {
+        errors.paypalEmail = 'Please enter a valid email address';
+        isValid = false;
+      }
+    } else if (paymentMethod === 'Mpesa') {
+      if (!paymentDetails.mpesaNumber.trim()) {
+        errors.mpesaNumber = 'M-Pesa number is required';
+        isValid = false;
+      } else if (!/^\d{10,12}$/.test(paymentDetails.mpesaNumber.replace(/\D/g, ''))) {
+        errors.mpesaNumber = 'Please enter a valid M-Pesa number';
+        isValid = false;
+      }
+    }
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
+  const handleSubmit = async () => {
     if (!paymentMethod) {
       Alert.alert('Error', 'Please select a payment method');
       return;
     }
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsProcessing(true);
     const orderNumber = generateOrderNumber();
-    completeOrder(paymentMethod, paymentDetails, orderNumber);
-    nextStep();
+    
+    try {
+      const result = await completeOrder(paymentMethod, paymentDetails, orderNumber);
+      if (result) {
+        nextStep();
+      }
+    } catch (error) {
+      console.error('Payment processing error:', error);
+      Alert.alert('Payment Error', 'Failed to process payment. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Format M-Pesa number to ensure it's in the correct format
+  const formatMpesaNumber = (number: string) => {
+    // Remove non-digit characters
+    let digits = number.replace(/\D/g, '');
+    
+    // Handle Kenyan phone numbers - ensure it starts with 254
+    if (digits.startsWith('0') && digits.length >= 10) {
+      digits = '254' + digits.substring(1);
+    } else if (!digits.startsWith('254') && digits.length >= 9) {
+      digits = '254' + digits;
+    }
+    
+    return digits;
   };
 
   return (
@@ -423,7 +587,7 @@ const PaymentOptions = ({
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Card Number</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, formErrors.cardNumber ? styles.inputError : null]}
                 placeholder="1234 5678 9012 3456"
                 keyboardType="numeric"
                 value={paymentDetails.cardNumber}
@@ -431,23 +595,25 @@ const PaymentOptions = ({
                   setPaymentDetails({ ...paymentDetails, cardNumber: text })
                 }
               />
+              {formErrors.cardNumber ? <Text style={styles.errorText}>{formErrors.cardNumber}</Text> : null}
             </View>
             <View style={styles.rowInputs}>
               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                 <Text style={styles.inputLabel}>Expiry Date</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, formErrors.expiry ? styles.inputError : null]}
                   placeholder="MM/YY"
                   value={paymentDetails.expiry}
                   onChangeText={(text) =>
                     setPaymentDetails({ ...paymentDetails, expiry: text })
                   }
                 />
+                {formErrors.expiry ? <Text style={styles.errorText}>{formErrors.expiry}</Text> : null}
               </View>
               <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                 <Text style={styles.inputLabel}>CVV</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, formErrors.cvv ? styles.inputError : null]}
                   placeholder="123"
                   keyboardType="numeric"
                   maxLength={3}
@@ -456,6 +622,7 @@ const PaymentOptions = ({
                     setPaymentDetails({ ...paymentDetails, cvv: text })
                   }
                 />
+                {formErrors.cvv ? <Text style={styles.errorText}>{formErrors.cvv}</Text> : null}
               </View>
             </View>
           </View>
@@ -466,7 +633,7 @@ const PaymentOptions = ({
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>PayPal Email</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, formErrors.paypalEmail ? styles.inputError : null]}
                 placeholder="email@example.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -475,6 +642,7 @@ const PaymentOptions = ({
                   setPaymentDetails({ ...paymentDetails, paypalEmail: text })
                 }
               />
+              {formErrors.paypalEmail ? <Text style={styles.errorText}>{formErrors.paypalEmail}</Text> : null}
             </View>
           </View>
         )}
@@ -482,16 +650,31 @@ const PaymentOptions = ({
         {paymentMethod === 'Mpesa' && (
           <View style={styles.formCard}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Mpesa Number</Text>
+              <Text style={styles.inputLabel}>M-Pesa Number</Text>
               <TextInput
-                style={styles.input}
-                placeholder="Enter Mpesa number"
+                style={[styles.input, formErrors.mpesaNumber ? styles.inputError : null]}
+                placeholder="Enter M-Pesa number (e.g. 254712345678)"
                 keyboardType="phone-pad"
                 value={paymentDetails.mpesaNumber}
-                onChangeText={(text) =>
-                  setPaymentDetails({ ...paymentDetails, mpesaNumber: text })
-                }
+                onChangeText={(text) => {
+                  const formattedNumber = formatMpesaNumber(text);
+                  setPaymentDetails({ ...paymentDetails, mpesaNumber: formattedNumber });
+                }}
               />
+              {formErrors.mpesaNumber ? (
+                <Text style={styles.errorText}>{formErrors.mpesaNumber}</Text>
+              ) : (
+                <Text style={styles.helperText}>
+                  Enter your M-Pesa registered phone number starting with 254
+                </Text>
+              )}
+            </View>
+            
+            <View style={styles.mpesaInfoCard}>
+              <Ionicons name="information-circle" size={20} color="#3498DB" />
+              <Text style={styles.mpesaInfoText}>
+                You will receive an M-Pesa STK Push prompt on your phone to complete the payment.
+              </Text>
             </View>
           </View>
         )}
@@ -501,17 +684,193 @@ const PaymentOptions = ({
           title="Back" 
           onPress={prevStep} 
           variant="secondary" 
+          disabled={isProcessing}
         />
         <CustomButton 
-          title="Complete Order" 
+          title={isProcessing ? "Processing..." : "Complete Order"}
           onPress={handleSubmit} 
+          disabled={isProcessing || !paymentMethod}
         />
       </View>
     </View>
   );
 };
 
-const OrderConfirmation = ({ orderDetails }: { orderDetails: OrderDetails }) => (
+const MpesaPaymentStatus = ({
+  orderDetails,
+  onComplete,
+  onRetry,
+}: {
+  orderDetails: OrderDetails;
+  onComplete: () => void;
+  onRetry: () => void;
+}) => {
+  const [paymentStatus, setPaymentStatus] = useState(orderDetails.status);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const [statusCheckCount, setStatusCheckCount] = useState(0);
+  const [timer, setTimer] = useState(60);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    let statusCheckInterval: NodeJS.Timeout;
+
+    // If payment is pending, start checking status every 5 seconds
+    if (paymentStatus === 'pending') {
+      // Check status immediately on first load
+      checkPaymentStatus();
+      
+      // Set up interval for status checks (every 5 seconds)
+      statusCheckInterval = setInterval(() => {
+        if (statusCheckCount < 12) { // Maximum 12 checks (1 minute)
+          checkPaymentStatus();
+          setStatusCheckCount(prevCount => prevCount + 1);
+        } else {
+          clearInterval(statusCheckInterval);
+        }
+      }, 5000);
+      
+      // Set up countdown timer
+      interval = setInterval(() => {
+        setTimer(prevTimer => {
+          if (prevTimer <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prevTimer - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(statusCheckInterval);
+    };
+  }, [paymentStatus, statusCheckCount]);
+
+  const checkPaymentStatus = async () => {
+    if (isCheckingStatus) return;
+    
+    setIsCheckingStatus(true);
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/orders/payment-status/${orderDetails.orderNumber}`
+      );
+      
+      if (response.data.success) {
+        setPaymentStatus(response.data.paymentStatus);
+        
+        if (response.data.paymentStatus === 'completed') {
+          // Update the local storage with completed status
+          await OrderStorageService.updateOrder(
+            orderDetails.orderNumber, 
+            { status: 'completed' }
+          );
+          
+          // Wait 2 seconds then proceed to completion
+          setTimeout(() => {
+            onComplete();
+          }, 2000);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+    } finally {
+      setIsCheckingStatus(false);
+    }
+  };
+
+  return (
+    <View style={styles.mpesaStatusContainer}>
+      <View style={styles.mpesaStatusCard}>
+        <View style={styles.mpesaStatusHeader}>
+          <Ionicons 
+            name={
+              paymentStatus === 'completed' ? 'checkmark-circle' : 
+              paymentStatus === 'failed' ? 'close-circle' : 'time'
+            } 
+            size={50} 
+            color={
+              paymentStatus === 'completed' ? '#2ECC71' : 
+              paymentStatus === 'failed' ? '#E74C3C' : '#3498DB'
+            } 
+          />
+          <Text style={styles.mpesaStatusTitle}>
+            {paymentStatus === 'completed' ? 'Payment Successful' : 
+             paymentStatus === 'failed' ? 'Payment Failed' : 'Payment Pending'}
+          </Text>
+        </View>
+        
+        <View style={styles.mpesaStatusContent}>
+          <Text style={styles.mpesaOrderNumber}>
+            Order #{orderDetails.orderNumber}
+          </Text>
+          
+          {paymentStatus === 'pending' && (
+            <>
+              <Text style={styles.mpesaStatusMessage}>
+                Please check your phone for the M-Pesa STK push prompt and enter your PIN to complete the payment.
+              </Text>
+              <View style={styles.mpesaTimer}>
+                <Text style={styles.mpesaTimerText}>
+                  Auto-refreshing in {timer} seconds
+                </Text>
+                <ActivityIndicator 
+                  size="small" 
+                  color="#3498DB" 
+                  style={styles.mpesaTimerSpinner} 
+                />
+              </View>
+            </>
+          )}
+          
+          {paymentStatus === 'completed' && (
+            <Text style={styles.mpesaStatusMessage}>
+              Your payment was successfully processed. Thank you for your order!
+            </Text>
+          )}
+          
+          {paymentStatus === 'failed' && (
+            <Text style={styles.mpesaStatusMessage}>
+              Your payment could not be processed. Please try again or choose a different payment method.
+            </Text>
+          )}
+        </View>
+        
+        <View style={styles.mpesaStatusActions}>
+          {paymentStatus === 'pending' && (
+            <CustomButton 
+              title="Check Status" 
+              onPress={checkPaymentStatus}
+              disabled={isCheckingStatus}
+            />
+          )}
+          
+          {paymentStatus === 'completed' && (
+            <CustomButton 
+              title="Continue" 
+              onPress={onComplete}
+            />
+          )}
+          
+          {paymentStatus === 'failed' && (
+            <CustomButton 
+              title="Try Again" 
+              onPress={onRetry}
+            />
+          )}
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const OrderConfirmation = ({ 
+  orderDetails, 
+  navigationToOrderHistory 
+}: { 
+  orderDetails: OrderDetails,
+  navigationToOrderHistory?: () => void 
+}) => (
   <View style={styles.stepContainer}>
     <View style={styles.confirmationCard}>
       <View style={styles.successIcon}>
@@ -528,88 +887,207 @@ const OrderConfirmation = ({ orderDetails }: { orderDetails: OrderDetails }) => 
         <Text style={styles.confirmationDelivery}>
           Estimated Delivery: 3-5 business days
         </Text>
+        {orderDetails.paymentMethod === 'Mpesa' && (
+          <View style={styles.paymentStatusInfo}>
+            <Ionicons 
+              name={orderDetails.status === 'completed' ? 'checkmark-circle' : 'time'} 
+              size={18} 
+              color={orderDetails.status === 'completed' ? '#2ECC71' : '#F39C12'} 
+            />
+            <Text style={styles.paymentStatusText}>
+              {orderDetails.status === 'completed' 
+                ? 'Payment completed' 
+                : 'Payment processing'
+              }
+            </Text>
+          </View>
+        )}
       </View>
+      
+      {navigationToOrderHistory && (
+        <CustomButton 
+          title="View Order History" 
+          onPress={navigationToOrderHistory} 
+        />
+      )}
     </View>
   </View>
 );
 
-// Main Component
-const TestKitOrderSystem = () => {
-  const [step, setStep] = useState(1);
-  const [kits, setKits] = useState<TestKit[]>([]);
+// Main CheckoutScreen Component
+export const CheckoutScreen = ({ navigation }: { navigation: any }) => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [testKits, setTestKits] = useState<TestKit[]>([]);
   const [selectedKits, setSelectedKits] = useState<SelectedKit[]>([]);
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     address: '',
     phone: '',
     email: '',
   });
-  const [orderDetails, setOrderDetails] = useState<OrderDetails>({
-    orderNumber: '',
-  });
-  const [loading, setLoading] = useState(true);
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [showMpesaStatusModal, setShowMpesaStatusModal] = useState(false);
 
   useEffect(() => {
     fetchTestKits();
   }, []);
 
   const fetchTestKits = async () => {
+    setIsLoading(true);
     try {
       const response = await axios.get(`${BASE_URL}/testkits`);
-      setKits(response.data);
+      // Directly set the entire response.data to testKits without checking for success
+      setTestKits(response.data);
     } catch (error) {
+      console.error('Error fetching test kits:', error);
       Alert.alert('Error', 'Failed to fetch test kits');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
-  const nextStep = () => setStep(step + 1);
-  const prevStep = () => setStep(step - 1);
 
   const completeOrder = async (
     paymentMethod: string,
     paymentDetails: PaymentDetails,
     orderNumber: string
-  ) => {
+  ): Promise<OrderDetails | null> => {
     try {
-      const response = await axios.post(`${BASE_URL}/orders`, {
-        selectedKits,
-        shippingInfo,
-        paymentMethod,
-        paymentDetails,
-        orderNumber,
-      });
-      setOrderDetails(response.data);
+      const totalAmount = selectedKits.reduce(
+        (sum, kit) => sum + kit.price * kit.quantity,
+        0
+      );
+
+      // For M-Pesa, we need to initiate the STK push
+      if (paymentMethod === 'Mpesa') {
+        const response = await axios.post(`${BASE_URL}/orders`, {
+          selectedKits: selectedKits,
+          shippingInfo: shippingInfo,
+          paymentMethod: paymentMethod,
+          paymentDetails: paymentDetails,
+          orderNumber: orderNumber,
+        });
+
+        if (response.data.success) {
+          const newOrderDetails: OrderDetails = {
+            orderNumber: orderNumber,
+            paymentMethod: paymentMethod,
+            status: 'pending',
+            checkoutRequestID: response.data.CheckoutRequestID,
+            merchantRequestID: response.data.MerchantRequestID,
+            totalAmount: totalAmount,
+          };
+
+          // Store order in local storage
+          await OrderStorageService.saveOrder({
+            orderNumber: newOrderDetails.orderNumber,
+            items: selectedKits,
+            totalAmount: totalAmount,
+            paymentMethod: paymentMethod,
+            status: 'pending',
+            orderDate: new Date().toISOString(),
+            shippingInfo: shippingInfo,
+          });
+
+          setOrderDetails(newOrderDetails);
+          setShowMpesaStatusModal(true);
+          return newOrderDetails;
+        } else {
+          throw new Error('Failed to initiate M-Pesa payment');
+        }
+      } else {
+        // For credit card and PayPal, simulate a payment process
+        // In a real app, you would integrate with a payment gateway
+        const mockPaymentResponse = await new Promise<boolean>((resolve) => {
+          setTimeout(() => {
+            resolve(true); // Simulate successful payment
+          }, 2000);
+        });
+
+        if (mockPaymentResponse) {
+          const newOrderDetails: OrderDetails = {
+            orderNumber: orderNumber,
+            paymentMethod: paymentMethod,
+            status: 'completed',
+            totalAmount: totalAmount,
+          };
+
+          // Store order in local storage
+          await OrderStorageService.saveOrder({
+            orderNumber: newOrderDetails.orderNumber,
+            items: selectedKits,
+            totalAmount: totalAmount,
+            paymentMethod: paymentMethod,
+            status: 'completed',
+            orderDate: new Date().toISOString(),
+            shippingInfo: shippingInfo,
+          });
+
+          setOrderDetails(newOrderDetails);
+          return newOrderDetails;
+        } else {
+          throw new Error('Payment processing failed');
+        }
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to place order');
+      console.error('Payment error:', error);
+      Alert.alert(
+        'Payment Error',
+        'There was an error processing your payment. Please try again.'
+      );
+      return null;
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3498DB" />
-      </View>
-    );
-  }
+  const handleCloseModal = () => {
+    setShowMpesaStatusModal(false);
+    setCurrentStep(5); // Move to confirmation step
+  };
+
+  const handleRetryPayment = () => {
+    setShowMpesaStatusModal(false);
+    setCurrentStep(4); // Go back to payment step
+  };
+
+  const navigateToOrderHistory = () => {
+    if (navigation) {
+      navigation.navigate('OrderHistory');
+    }
+  };
+
+  const getStepTitle = () => {
+    switch (currentStep) {
+      case 1:
+        return 'Select Test Kits';
+      case 2:
+        return 'Review Order';
+      case 3:
+        return 'Shipping Details';
+      case 4:
+        return 'Payment Method';
+      case 5:
+        return 'Order Confirmation';
+      default:
+        return 'Checkout';
+    }
+  };
 
   const renderStep = () => {
-    switch (step) {
+    switch (currentStep) {
       case 1:
         return (
           <TestKitSelection
-            kits={kits}
+            kits={testKits}
             selectedKits={selectedKits}
             setSelectedKits={setSelectedKits}
-            nextStep={nextStep}
+            nextStep={() => setCurrentStep(2)}
           />
         );
       case 2:
         return (
           <ReviewAndConfirm
             selectedKits={selectedKits}
-            prevStep={prevStep}
-            nextStep={nextStep}
+            prevStep={() => setCurrentStep(1)}
+            nextStep={() => setCurrentStep(3)}
           />
         );
       case 3:
@@ -617,34 +1095,72 @@ const TestKitOrderSystem = () => {
           <ShippingInformation
             shippingInfo={shippingInfo}
             setShippingInfo={setShippingInfo}
-            prevStep={prevStep}
-            nextStep={nextStep}
+            prevStep={() => setCurrentStep(2)}
+            nextStep={() => setCurrentStep(4)}
           />
         );
       case 4:
         return (
           <PaymentOptions
-            prevStep={prevStep}
-            nextStep={nextStep}
+            prevStep={() => setCurrentStep(3)}
+            nextStep={() => {
+              if (!showMpesaStatusModal) {
+                setCurrentStep(5);
+              }
+            }}
             completeOrder={completeOrder}
           />
         );
       case 5:
-        return <OrderConfirmation orderDetails={orderDetails} />;
+        return orderDetails ? (
+          <OrderConfirmation 
+            orderDetails={orderDetails} 
+            navigationToOrderHistory={navigateToOrderHistory}
+          />
+        ) : (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#3498DB" />
+            <Text style={styles.loadingText}>Processing your order...</Text>
+          </View>
+        );
       default:
         return null;
     }
   };
 
   return (
-    <View style={styles.mainContainer}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <ModernHeader 
-        step={step} 
+        step={currentStep} 
         totalSteps={5} 
-        title="Medical Test Kits" 
+        title={getStepTitle()} 
       />
-      {renderStep()}
+
+      {isLoading && currentStep === 1 ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3498DB" />
+          <Text style={styles.loadingText}>Loading test kits...</Text>
+        </View>
+      ) : (
+        renderStep()
+      )}
+
+      {/* M-Pesa Status Modal */}
+      <Modal
+        visible={showMpesaStatusModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => handleCloseModal()}
+      >
+        {orderDetails && (
+          <MpesaPaymentStatus
+            orderDetails={orderDetails}
+            onComplete={handleCloseModal}
+            onRetry={handleRetryPayment}
+          />
+        )}
+      </Modal>
     </View>
   );
 };
@@ -985,6 +1501,158 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F9F9F9', // Light white background
   },
+  // Container style referenced in main component
+  container: {
+    flex: 1,
+    backgroundColor: '#F9F9F9',
+  },
+  
+  // Button disabled styles
+  buttonDisabled: {
+    backgroundColor: '#F0F0F0',
+    borderColor: '#E0E0E0',
+  },
+  
+  buttonTextDisabled: {
+    color: '#AAAAAA',
+  },
+  
+  // Input error styles
+  inputError: {
+    borderColor: '#E74C3C',
+    borderWidth: 1,
+  },
+  
+  errorText: {
+    color: '#E74C3C',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  
+  helperText: {
+    color: '#777777',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  
+  // Kit description
+  kitDescription: {
+    fontSize: 12,
+    color: '#777777',
+    marginTop: 4,
+  },
+  
+  // M-Pesa specific styles
+  mpesaInfoCard: {
+    flexDirection: 'row',
+    backgroundColor: '#F0F7FC',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  
+  mpesaInfoText: {
+    marginLeft: 8,
+    color: '#2C3E50',
+    fontSize: 13,
+    flex: 1,
+  },
+  
+  // M-Pesa Status Modal
+  mpesaStatusContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  
+  mpesaStatusCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  
+  mpesaStatusHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  
+  mpesaStatusTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#2C3E50',
+    marginTop: 12,
+  },
+  
+  mpesaStatusContent: {
+    marginBottom: 24,
+  },
+  
+  mpesaOrderNumber: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2C3E50',
+    marginBottom: 12,
+  },
+  
+  mpesaStatusMessage: {
+    fontSize: 14,
+    color: '#2C3E50',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  
+  mpesaTimer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F0F7FC',
+    padding: 12,
+    borderRadius: 8,
+  },
+  
+  mpesaTimerText: {
+    fontSize: 14,
+    color: '#3498DB',
+    marginRight: 8,
+  },
+  
+  mpesaTimerSpinner: {
+    marginLeft: 8,
+  },
+  
+  mpesaStatusActions: {
+    marginTop: 8,
+  },
+  
+  // Payment status display
+  paymentStatusInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  
+  paymentStatusText: {
+    fontSize: 14,
+    marginLeft: 6,
+    fontWeight: '500',
+    color: '#2C3E50',
+  },
+  
+  // Loading text
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#777777',
+  },
 });
 
-export default TestKitOrderSystem;
+
+export default CheckoutScreen;
