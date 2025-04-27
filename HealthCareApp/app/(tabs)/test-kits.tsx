@@ -11,7 +11,6 @@ import {
   Alert,
   StatusBar,
   Platform,
-  Modal,
   Dimensions,
 } from 'react-native';
 import axios from 'axios';
@@ -75,6 +74,7 @@ const ModernHeader = ({
     { title: "Review", isCompleted: step > 2, isActive: step === 2 },
     { title: "Shipping", isCompleted: step > 3, isActive: step === 3 },
     { title: "Payment", isCompleted: step > 4, isActive: step === 4 },
+    { title: "Status", isCompleted: step > 5, isActive: step === 5 },
   ];
 
   return (
@@ -201,7 +201,7 @@ const TestKitSelection = ({
             </View>
             <View style={styles.kitInfo}>
               <Text style={styles.kitName}>{kit.name}</Text>
-              <Text style={styles.kitPrice}>${kit.price}</Text>
+              <Text style={styles.kitPrice}>Ksh{kit.price}</Text>
               {kit.description && (
                 <Text style={styles.kitDescription} numberOfLines={2}>
                   {kit.description}
@@ -283,7 +283,7 @@ const ReviewAndConfirm = ({
         ))}
         <View style={styles.totalContainer}>
           <Text style={styles.totalLabel}>Total Amount</Text>
-          <Text style={styles.totalAmount}>${totalAmount.toFixed(2)}</Text>
+          <Text style={styles.totalAmount}>Ksh{totalAmount.toFixed(2)}</Text>
         </View>
       </ScrollView>
       <View style={styles.buttonContainer}>
@@ -696,20 +696,24 @@ const PaymentOptions = ({
   );
 };
 
-const MpesaPaymentStatus = ({
+// This component replaces the modal with an integrated page in the flow
+const PaymentStatusScreen = ({
   orderDetails,
-  onComplete,
-  onRetry,
+  prevStep,
+  nextStep,
+  checkPaymentStatus,
 }: {
   orderDetails: OrderDetails;
-  onComplete: () => void;
-  onRetry: () => void;
+  prevStep: () => void;
+  nextStep: () => void;
+  checkPaymentStatus: () => Promise<void>;
 }) => {
   const [paymentStatus, setPaymentStatus] = useState(orderDetails.status);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [statusCheckCount, setStatusCheckCount] = useState(0);
   const [timer, setTimer] = useState(60);
-
+  const [statusDescription, setStatusDescription] = useState('');
+  
   useEffect(() => {
     let interval: NodeJS.Timeout;
     let statusCheckInterval: NodeJS.Timeout;
@@ -717,12 +721,12 @@ const MpesaPaymentStatus = ({
     // If payment is pending, start checking status every 5 seconds
     if (paymentStatus === 'pending') {
       // Check status immediately on first load
-      checkPaymentStatus();
+      handleCheckStatus();
       
       // Set up interval for status checks (every 5 seconds)
       statusCheckInterval = setInterval(() => {
         if (statusCheckCount < 12) { // Maximum 12 checks (1 minute)
-          checkPaymentStatus();
+          handleCheckStatus();
           setStatusCheckCount(prevCount => prevCount + 1);
         } else {
           clearInterval(statusCheckInterval);
@@ -747,31 +751,13 @@ const MpesaPaymentStatus = ({
     };
   }, [paymentStatus, statusCheckCount]);
 
-  const checkPaymentStatus = async () => {
+  const handleCheckStatus = async () => {
     if (isCheckingStatus) return;
     
     setIsCheckingStatus(true);
     try {
-      const response = await axios.get(
-        `${BASE_URL}/orders/payment-status/${orderDetails.orderNumber}`
-      );
-      
-      if (response.data.success) {
-        setPaymentStatus(response.data.paymentStatus);
-        
-        if (response.data.paymentStatus === 'completed') {
-          // Update the local storage with completed status
-          await OrderStorageService.updateOrder(
-            orderDetails.orderNumber, 
-            { status: 'completed' }
-          );
-          
-          // Wait 2 seconds then proceed to completion
-          setTimeout(() => {
-            onComplete();
-          }, 2000);
-        }
-      }
+      await checkPaymentStatus();
+      // Status update is handled by the parent component
     } catch (error) {
       console.error('Error checking payment status:', error);
     } finally {
@@ -779,10 +765,24 @@ const MpesaPaymentStatus = ({
     }
   };
 
+  const getStatusMessage = () => {
+    if (paymentStatus === 'pending') {
+      return statusDescription || 
+        "Please check your phone for the M-Pesa STK push prompt and enter your PIN to complete the payment.";
+    } else if (paymentStatus === 'completed') {
+      return statusDescription || 
+        "Your payment was successfully processed. Thank you for your order!";
+    } else if (paymentStatus === 'failed') {
+      return statusDescription || 
+        "Your payment could not be processed. Please try again or choose a different payment method.";
+    }
+    return "";
+  };
+
   return (
-    <View style={styles.mpesaStatusContainer}>
-      <View style={styles.mpesaStatusCard}>
-        <View style={styles.mpesaStatusHeader}>
+    <View style={styles.stepContainer}>
+      <View style={styles.paymentStatusCard}>
+        <View style={styles.paymentStatusHeader}>
           <Ionicons 
             name={
               paymentStatus === 'completed' ? 'checkmark-circle' : 
@@ -794,75 +794,81 @@ const MpesaPaymentStatus = ({
               paymentStatus === 'failed' ? '#E74C3C' : '#3498DB'
             } 
           />
-          <Text style={styles.mpesaStatusTitle}>
+          <Text style={styles.paymentStatusTitle}>
             {paymentStatus === 'completed' ? 'Payment Successful' : 
-             paymentStatus === 'failed' ? 'Payment Failed' : 'Payment Pending'}
+             paymentStatus === 'failed' ? 'Payment Failed' : 'Payment Processing'}
           </Text>
         </View>
         
-        <View style={styles.mpesaStatusContent}>
-          <Text style={styles.mpesaOrderNumber}>
+        <View style={styles.paymentStatusContent}>
+          <Text style={styles.orderNumber}>
             Order #{orderDetails.orderNumber}
           </Text>
           
+          <Text style={styles.paymentStatusMessage}>
+            {getStatusMessage()}
+          </Text>
+          
           {paymentStatus === 'pending' && (
-            <>
-              <Text style={styles.mpesaStatusMessage}>
-                Please check your phone for the M-Pesa STK push prompt and enter your PIN to complete the payment.
+            <View style={styles.paymentTimer}>
+              <Text style={styles.paymentTimerText}>
+                Auto-refreshing in {timer} seconds
               </Text>
-              <View style={styles.mpesaTimer}>
-                <Text style={styles.mpesaTimerText}>
-                  Auto-refreshing in {timer} seconds
-                </Text>
-                <ActivityIndicator 
-                  size="small" 
-                  color="#3498DB" 
-                  style={styles.mpesaTimerSpinner} 
-                />
-              </View>
-            </>
-          )}
-          
-          {paymentStatus === 'completed' && (
-            <Text style={styles.mpesaStatusMessage}>
-              Your payment was successfully processed. Thank you for your order!
-            </Text>
-          )}
-          
-          {paymentStatus === 'failed' && (
-            <Text style={styles.mpesaStatusMessage}>
-              Your payment could not be processed. Please try again or choose a different payment method.
-            </Text>
+              <ActivityIndicator 
+                size="small" 
+                color="#3498DB" 
+                style={styles.paymentTimerSpinner} 
+              />
+            </View>
           )}
         </View>
         
-        <View style={styles.mpesaStatusActions}>
+        <View style={styles.buttonContainer}>
           {paymentStatus === 'pending' && (
-            <CustomButton 
-              title="Check Status" 
-              onPress={checkPaymentStatus}
-              disabled={isCheckingStatus}
-            />
+            <>
+              <CustomButton 
+                title="Back to Payment" 
+                onPress={prevStep}
+                variant="secondary"
+                disabled={isCheckingStatus}
+              />
+              <CustomButton 
+                title="Check Status" 
+                onPress={handleCheckStatus}
+                disabled={isCheckingStatus}
+              />
+            </>
           )}
           
           {paymentStatus === 'completed' && (
             <CustomButton 
               title="Continue" 
-              onPress={onComplete}
+              onPress={nextStep}
             />
           )}
           
           {paymentStatus === 'failed' && (
-            <CustomButton 
-              title="Try Again" 
-              onPress={onRetry}
-            />
+            <>
+              <CustomButton 
+                title="Try Again" 
+                onPress={prevStep}
+                variant="secondary"
+              />
+              <TouchableOpacity 
+                style={styles.manualVerificationLink}
+              >
+                <Text style={styles.manualVerificationText}>
+                  Verify with M-Pesa code
+                </Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
       </View>
     </View>
   );
 };
+
 
 const OrderConfirmation = ({ 
   orderDetails, 
@@ -1146,21 +1152,7 @@ export const CheckoutScreen = ({ navigation }: { navigation: any }) => {
         renderStep()
       )}
 
-      {/* M-Pesa Status Modal */}
-      <Modal
-        visible={showMpesaStatusModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => handleCloseModal()}
-      >
-        {orderDetails && (
-          <MpesaPaymentStatus
-            orderDetails={orderDetails}
-            onComplete={handleCloseModal}
-            onRetry={handleRetryPayment}
-          />
-        )}
-      </Modal>
+      
     </View>
   );
 };

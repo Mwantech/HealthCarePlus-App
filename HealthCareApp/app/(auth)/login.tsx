@@ -80,53 +80,60 @@ export default function LoginScreen() {
     return true;
   };
 
-  const handleLogin = async () => {
-    try {
-      setError(null);
-      if (!validateInput()) return;
 
-      setIsLoading(true);
+const handleLogin = async () => {
+  try {
+    setError(null);
+    if (!validateInput()) return;
 
-      const response = await axios.post<LoginResponse>(`${BASE_URL}/user/login`, {
-        email: email.trim(),
-        password: password.trim()
-      });
+    setIsLoading(true);
 
-      const { token, type, id } = response.data;
+    const response = await axios.post<LoginResponse>(`${BASE_URL}/user/login`, {
+      email: email.trim(),
+      password: password.trim()
+    });
 
-      // Store user data
-      await AsyncStorage.multiSet([
-        ['userToken', token],
-        ['userId', id.toString()],
-        ['userType', type]
-      ]);
+    const { token, user, id, type } = response.data;
 
-      // Navigate to main app
-      router.replace('/(tabs)');
+    // Store user data in AsyncStorage
+    await AsyncStorage.multiSet([
+      ['userToken', token],
+      ['userId', id.toString()],
+      ['userType', type],
+      ['userData', JSON.stringify(user || { id, email, name: email.split('@')[0] })]
+    ]);
 
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        // Handle Axios specific errors
-        if (error.response) {
-          // Server responded with error
-          const errorData = error.response.data as ApiError;
-          setError(errorData.message || 'Login failed');
-        } else if (error.request) {
-          // Request made but no response
-          setError('Unable to reach the server. Please check your connection.');
-        } else {
-          // Error in request setup
-          setError('An error occurred while setting up the request.');
-        }
+    // Use the signIn method from AuthContext to update the auth state
+    // This is the critical step that was missing
+    await signIn(token, user || { id, email, name: email.split('@')[0] });
+
+    // Navigate to main app
+    router.replace('/(tabs)');
+
+  } catch (error) {
+    // Error handling remains the same
+    if (axios.isAxiosError(error)) {
+      // Handle Axios specific errors
+      if (error.response) {
+        // Server responded with error
+        const errorData = error.response.data as ApiError;
+        setError(errorData.message || 'Login failed');
+      } else if (error.request) {
+        // Request made but no response
+        setError('Unable to reach the server. Please check your connection.');
       } else {
-        // Handle non-Axios errors
-        setError('An unexpected error occurred');
+        // Error in request setup
+        setError('An error occurred while setting up the request.');
       }
-      console.error('Login error:', error);
-    } finally {
-      setIsLoading(false);
+    } else {
+      // Handle non-Axios errors
+      setError('An unexpected error occurred');
     }
-  };
+    console.error('Login error:', error);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleBiometricLogin = async () => {
     try {

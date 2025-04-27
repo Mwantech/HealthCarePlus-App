@@ -1,0 +1,295 @@
+/* Container and layout styles */
+.container {
+    padding: 1.5rem 0;
+  }
+  
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -15px;
+    margin-left: -15px;
+  }
+  
+  .colMd9 {
+    flex: 0 0 75%;
+    max-width: 75%;
+    padding-right: 15px;
+    padding-left: 15px;
+    position: relative;
+    width: 100%;
+  }
+  
+  .colMd3 {
+    flex: 0 0 25%;
+    max-width: 25%;
+    padding-right: 15px;
+    padding-left: 15px;
+    position: relative;
+    width: 100%;
+  }
+  
+  /* Video container styles */
+  .videoContainer {
+    position: relative;
+    height: 75vh;
+  }
+  
+  .mainVideo {
+    width: 100%;
+    height: 100%;
+    background-color: #343a40;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0.25rem;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .remoteVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .waitingOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+  
+  .waitingText {
+    color: white;
+    text-align: center;
+    padding: 1.5rem;
+  }
+  
+  .roomCode {
+    font-weight: bold;
+  }
+  
+  .roomCodeHint {
+    color: #6c757d;
+    margin-bottom: 0;
+  }
+  
+  .statusBadge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 0.5rem;
+    z-index: 10;
+  }
+  
+  .statusBadgeInner {
+    padding: 0.5rem 1rem;
+  }
+  
+  .selfViewContainer {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 180px;
+    height: 240px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #fff;
+    z-index: 10;
+  }
+  
+  .selfVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .videoOffOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 14px;
+  }
+  
+  /* Control panel styles */
+  .controlsContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .controlsPanel {
+    background-color: #f8f9fa;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+  }
+  
+  .controlButton {
+    border-radius: 50%;
+    padding: 0.75rem;
+    margin: 0 0.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 50px;
+  }
+  
+  /* Loading styles */
+  .loadingContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+  }
+  
+  .loadingText {
+    margin-left: 0.75rem;
+  }
+  
+  .errorContainer {
+    margin-top: 1.5rem;
+  }
+  
+  /* Patient information sidebar styles */
+  .patientCard {
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 0.25rem;
+  }
+  
+  .patientCardHeader {
+    background-color: #0d6efd;
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  }
+  
+  .patientName {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .patientEmail {
+    color: #6c757d;
+    margin-bottom: 1rem;
+  }
+  
+  .divider {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .sectionTitle {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  
+  .appointmentDetails {
+    margin-bottom: 0;
+  }
+  
+  .patientIssuesList {
+    padding-left: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  
+  .patientIssuesItem {
+    margin-bottom: 0.25rem;
+  }
+  
+  .buttonGrid {
+    display: grid;
+    margin-top: 0.75rem;
+  }
+  
+  /* Session notes card styles */
+  .notesCard {
+    margin-top: 1rem;
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 0.25rem;
+  }
+  
+  .sessionNotesHeader {
+    background-color: #f8f9fa;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  }
+  
+  .notesBody {
+    padding: 1.25rem;
+  }
+  
+  .notesTextarea {
+    resize: none;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  
+  .saveButton {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.25rem;
+    width: 100%;
+    margin-top: 0.75rem;
+  }
+  
+  .saveButton:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .colMd9, .colMd3 {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+    
+    .videoContainer {
+      height: 50vh;
+    }
+    
+    .selfViewContainer {
+      width: 120px;
+      height: 160px;
+    }
+    
+    .notesCard {
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+  }

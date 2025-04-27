@@ -4,6 +4,7 @@ import './App.css';
 import AdminPage from './pages/Admin';
 import AdminLogin from './components/AdminLogin';
 import DoctorsPanelPage from './pages/DoctorsPanelPage';
+import DoctorVideoRoom from './pages/VideoRoom'; // Import the DoctorVideoRoom component
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -107,6 +108,16 @@ const App = () => {
             element={
               isAuthenticated && userType === 'doctor' 
                 ? renderContent(DoctorsPanelPage, { doctorId, onLogout: handleLogout }) 
+                : <Navigate to="/admin-login" />
+            } 
+          />
+          
+          {/* Doctor video room route with roomCode parameter */}
+          <Route 
+            path="/doctor/video/:roomCode" 
+            element={
+              isAuthenticated && userType === 'doctor' 
+                ? renderContent(DoctorVideoRoom, { doctorId, onLogout: handleLogout }) 
                 : <Navigate to="/admin-login" />
             } 
           />

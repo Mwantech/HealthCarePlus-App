@@ -108,6 +108,16 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="VideoRoom"
+          options={{
+            title: 'Video Room',
+            tabBarIcon: ({ color }) => (
+              <Ionicons name="people-outline" size={24} color={color} />
+            ),
+            tabBarLabelStyle: styles.tabBarLabel,
+          }}
+        />
+        <Tabs.Screen
           name="telemedicine"
           options={{
             title: 'Consult',

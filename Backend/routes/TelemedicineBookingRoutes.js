@@ -109,17 +109,17 @@ const initiateSTKPush = async (phoneNumber, amount, appointmentId) => {
 
 // Check STK Push Status
 const checkSTKStatus = async (checkoutRequestID) => {
-  const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
-  const businessShortCode = '174379';
-  const passkey = process.env.MPESA_PASS_KEY;
-  const password = Buffer.from(businessShortCode + passkey + timestamp).toString('base64');
-  
   const accessToken = await getAccessToken();
   if (!accessToken) return { success: false, error: 'Failed to get access token' };
 
+  const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
+  const businessShortCode = process.env.MPESA_SHORTCODE || '174379';
+  const passkey = process.env.MPESA_PASS_KEY;
+  const password = Buffer.from(businessShortCode + passkey + timestamp).toString('base64');
+  
   try {
     const response = await axios.post(
-      'https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query',
+      `${process.env.MPESA_ENV === 'production' ? 'https://api.safaricom.co.ke' : 'https://sandbox.safaricom.co.ke'}/mpesa/stkpushquery/v1/query`,
       {
         BusinessShortCode: businessShortCode,
         Password: password,
@@ -134,7 +134,15 @@ const checkSTKStatus = async (checkoutRequestID) => {
       }
     );
 
-    return { success: true, data: response.data };
+    console.log('Status response:', response.data);
+    return { 
+      success: true, 
+      data: response.data,
+      // Include explicit interpretation of the result codes
+      isPaid: response.data.ResultCode === 0 || response.data.ResultCode === '0',
+      isCancelled: response.data.ResultCode === 1032 || response.data.ResultCode === '1032',
+      resultDescription: response.data.ResultDesc
+    };
   } catch (error) {
     console.error('STK Status Query Error:', error.response?.data || error.message);
     return { success: false, error: error.response?.data || error.message };
@@ -156,7 +164,7 @@ const sendConfirmationEmail = async (appointmentData, paymentStatus) => {
       <p><strong>Date:</strong> ${date}</p>
       <p><strong>Time:</strong> ${time}</p>
       <p><strong>Room Code:</strong> ${roomCode}</p>
-      <p><strong>Price:</strong> $${price}</p>
+      <p><strong>Price:</strong> Ksh${price}</p>
       <p><strong>Payment Status:</strong> ${paymentStatus ? 'Paid' : 'Pending'}</p>
       <br>
       <p>Please use this room code to join your video call at the scheduled time.</p>
@@ -310,21 +318,67 @@ module.exports = (connection) => {
     console.log('Callback Data:', JSON.stringify(callbackData, null, 2));
     
     try {
-      // Check if it's a successful transaction
-      if (callbackData.Body.stkCallback.ResultCode === 0) {
+      // Check if we have a valid callback structure
+      if (!callbackData.Body || !callbackData.Body.stkCallback) {
+        console.error('Invalid callback data structure');
+        return res.status(200).json({ success: true }); // Still return 200 to Safaricom
+      }
+      
+      const resultCode = callbackData.Body.stkCallback.ResultCode;
+      let transactionId = 'N/A';
+      let transactionAmount = 0;
+      let phoneNumber = 'N/A';
+      let transactionDate = null;
+      
+      // Extract payment details from callback metadata if available
+      if (resultCode === 0 && callbackData.Body.stkCallback.CallbackMetadata && 
+          callbackData.Body.stkCallback.CallbackMetadata.Item) {
+        
+        const items = callbackData.Body.stkCallback.CallbackMetadata.Item;
+        
+        // Extract details
+        const amountItem = items.find(item => item.Name === 'Amount');
+        const mpesaReceiptNumberItem = items.find(item => item.Name === 'MpesaReceiptNumber');
+        const transactionDateItem = items.find(item => item.Name === 'TransactionDate');
+        const phoneNumberItem = items.find(item => item.Name === 'PhoneNumber');
+        
+        if (amountItem) transactionAmount = amountItem.Value;
+        if (mpesaReceiptNumberItem) transactionId = mpesaReceiptNumberItem.Value;
+        if (phoneNumberItem) phoneNumber = phoneNumberItem.Value;
+        if (transactionDateItem) transactionDate = transactionDateItem.Value;
+      }
+      
+      // Update appointment based on result code
+      if (resultCode === 0) {
         // Payment successful
         await connection.promise().query(
-          'UPDATE appointments SET payment_status = ?, transaction_id = ?, payment_details = ? WHERE id = ?',
-          ['completed', callbackData.Body.stkCallback.CallbackMetadata?.Item?.[1]?.Value || 'N/A', 
-           JSON.stringify(callbackData), appointmentId]
+          `UPDATE appointments 
+           SET payment_status = ?, 
+               transaction_id = ?, 
+               transaction_amount = ?,
+               transaction_phone = ?,
+               transaction_date = ?,
+               payment_details = ?, 
+               payment_description = ?
+           WHERE id = ?`,
+          [
+            'completed', 
+            transactionId, 
+            transactionAmount,
+            phoneNumber,
+            transactionDate,
+            JSON.stringify(callbackData), 
+            callbackData.Body.stkCallback.ResultDesc,
+            appointmentId
+          ]
         );
         
         // Fetch appointment details to send email
         const [appointmentRows] = await connection.promise().query(
-          'SELECT a.*, d.name as doctor_name, d.specialization as doctor_specialization, d.price ' +
-          'FROM appointments a ' +
-          'JOIN doctors d ON a.doctor_id = d.id ' +
-          'WHERE a.id = ?',
+          `SELECT a.*, d.name as doctor_name, d.specialization as doctor_specialization, d.price 
+           FROM appointments a 
+           JOIN doctors d ON a.doctor_id = d.id 
+           WHERE a.id = ?`,
           [appointmentId]
         );
         
@@ -348,15 +402,26 @@ module.exports = (connection) => {
       } else {
         // Payment failed
         await connection.promise().query(
-          'UPDATE appointments SET payment_status = ?, payment_details = ? WHERE id = ?',
-          ['failed', JSON.stringify(callbackData), appointmentId]
+          `UPDATE appointments 
+           SET payment_status = ?, 
+               payment_details = ?, 
+               payment_description = ?
+           WHERE id = ?`,
+          [
+            'failed', 
+            JSON.stringify(callbackData), 
+            callbackData.Body.stkCallback.ResultDesc,
+            appointmentId
+          ]
         );
       }
       
+      // Always return success response to Safaricom
       res.status(200).json({ success: true });
     } catch (error) {
       console.error('Error processing M-Pesa callback:', error);
-      res.status(500).json({ success: false, error: 'Internal server error' });
+      // Always return success response to Safaricom even if we had an error
+      res.status(200).json({ success: true });
     }
   });
 
@@ -365,8 +430,13 @@ module.exports = (connection) => {
     const { appointmentId } = req.params;
     
     try {
+      // Get the appointment with transaction details
       const [rows] = await connection.promise().query(
-        'SELECT payment_status, checkout_request_id, merchant_request_id FROM appointments WHERE id = ?',
+        `SELECT a.*, d.name as doctor_name, d.specialization as doctor_specialization, 
+                d.price, a.checkout_request_id, a.merchant_request_id, a.payment_status
+         FROM appointments a 
+         JOIN doctors d ON a.doctor_id = d.id 
+         WHERE a.id = ?`,
         [appointmentId]
       );
       
@@ -380,33 +450,96 @@ module.exports = (connection) => {
       if (appointment.payment_status === 'pending' && appointment.checkout_request_id) {
         const statusCheck = await checkSTKStatus(appointment.checkout_request_id);
         
-        if (statusCheck.success && statusCheck.data.ResultCode === 0) {
-          // Payment completed successfully according to status check
-          await connection.promise().query(
-            'UPDATE appointments SET payment_status = ? WHERE id = ?',
-            ['completed', appointmentId]
-          );
-          
-          return res.json({
-            success: true,
-            paymentStatus: 'completed',
-            message: 'Payment completed successfully'
-          });
+        if (statusCheck.success) {
+          // Update based on specific result codes
+          if (statusCheck.isPaid) {
+            // Payment completed successfully
+            await connection.promise().query(
+              `UPDATE appointments 
+               SET payment_status = ?, 
+                   payment_details = ?, 
+                   payment_description = ?
+               WHERE id = ?`,
+              ['completed', JSON.stringify(statusCheck.data), statusCheck.resultDescription, appointmentId]
+            );
+            
+            // Send confirmation email with payment confirmation
+            const appointmentData = {
+              email: appointment.user_email,
+              patientName: appointment.patient_name,
+              doctorName: appointment.doctor_name,
+              doctorSpecialization: appointment.doctor_specialization,
+              date: appointment.appointment_date,
+              time: appointment.appointment_time,
+              roomCode: appointment.room_code,
+              price: appointment.price
+            };
+            
+            await sendConfirmationEmail(appointmentData, true);
+            
+            return res.json({
+              success: true,
+              paymentStatus: 'completed',
+              message: 'Payment completed successfully',
+              description: statusCheck.resultDescription
+            });
+            
+          } else if (statusCheck.isCancelled) {
+            // Transaction was canceled by user
+            await connection.promise().query(
+              `UPDATE appointments 
+               SET payment_status = ?, 
+                   payment_details = ?, 
+                   payment_description = ?
+               WHERE id = ?`,
+              ['failed', JSON.stringify(statusCheck.data), 'Transaction canceled by user', appointmentId]
+            );
+            
+            return res.json({
+              success: true,
+              paymentStatus: 'failed',
+              message: 'Payment was canceled',
+              description: 'Transaction canceled by user'
+            });
+            
+          } else {
+            // Other failure or still processing
+            // Keep as pending or update based on the result description
+            if (statusCheck.data.ResultCode !== undefined) {
+              await connection.promise().query(
+                `UPDATE appointments 
+                 SET payment_description = ?
+                 WHERE id = ?`,
+                [statusCheck.resultDescription, appointmentId]
+              );
+            }
+            
+            return res.json({
+              success: true,
+              paymentStatus: appointment.payment_status,
+              message: statusCheck.resultDescription || 'Payment status unchanged',
+              checkoutRequestID: appointment.checkout_request_id,
+              merchantRequestID: appointment.merchant_request_id
+            });
+          }
         }
       }
       
-      // Return current payment status
+      // Return current payment status if we couldn't check or nothing changed
       res.json({
         success: true,
         paymentStatus: appointment.payment_status,
         checkoutRequestID: appointment.checkout_request_id,
-        merchantRequestID: appointment.merchant_request_id
+        merchantRequestID: appointment.merchant_request_id,
+        description: appointment.payment_description || 'No status description available'
       });
+      
     } catch (error) {
       console.error('Error checking payment status:', error);
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
   });
+  
 
   // Get appointment details by id
   router.get('/appointments/:appointmentId', async (req, res) => {

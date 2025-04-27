@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styles from './DoctorsPanel.module.css';
 
-const DoctorsPanelPage = ({ doctorId: propDoctorId }) => {
+const DoctorsPanelPage = ({ doctorId: propDoctorId, onLogout }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,6 +51,23 @@ const DoctorsPanelPage = ({ doctorId: propDoctorId }) => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  const navigateToVideoRoom = (roomCode) => {
+    if (roomCode) {
+      console.log(`Navigating to video room: /doctor/video/${roomCode}`);
+      // Use React Router navigation instead of full page redirect
+      navigate(`/doctor/video/${roomCode}`);
+    } else {
+      alert("No room code available for this appointment.");
+    }
+  };
+
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    }
+    navigate('/admin-login');
+  };
+
   if (loading) return (
     <div className={styles.panelContainer}>
       <div className={styles.loading}>Loading appointments...</div>
@@ -67,6 +84,11 @@ const DoctorsPanelPage = ({ doctorId: propDoctorId }) => {
     <div className={styles.panelContainer}>
       <div className={styles.header}>
         <h1 className={styles.title}>Doctor's Dashboard</h1>
+        <div>
+          <button className={styles.logoutButton} onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
       </div>
       
       <h2 className={styles.subtitle}>Your Appointments</h2>
@@ -85,6 +107,7 @@ const DoctorsPanelPage = ({ doctorId: propDoctorId }) => {
               <th>Email</th>
               <th>Room Code</th>
               <th>Issues</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -100,6 +123,24 @@ const DoctorsPanelPage = ({ doctorId: propDoctorId }) => {
                   </span>
                 </td>
                 <td>{appointment.issues || 'Not specified'}</td>
+                <td>
+                  {appointment.roomCode && (
+                    <button 
+                      className={styles.videoButton}
+                      onClick={() => navigateToVideoRoom(appointment.roomCode)}
+                    >
+                      Join Video Call
+                    </button>
+                  )}
+                  {!appointment.roomCode && (
+                    <button 
+                      className={`${styles.videoButton} ${styles.disabled}`}
+                      disabled
+                    >
+                      No Room Available
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

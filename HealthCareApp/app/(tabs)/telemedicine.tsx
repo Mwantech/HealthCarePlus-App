@@ -52,8 +52,21 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
   const [appointmentId, setAppointmentId] = useState<string>('');
   const [checkoutRequestID, setCheckoutRequestID] = useState<string>('');
   const [checkingPaymentStatus, setCheckingPaymentStatus] = useState<boolean>(false);
+  // Add state for payment description
+  const [paymentDescription, setPaymentDescription] = useState<string>('');
+  const pollCount = React.useRef<number>(0);
  
-  const healthIssues = ['Common Cold', 'Allergies', 'Skin Conditions', 'Mental Health', 'Chronic Disease Management'];
+  const healthIssues = ['Mental Health',
+  'Anxiety and Depression',
+  'Stress Management',
+  'Insomnia and Sleep Disorders',
+  'ADHD',
+  'PTSD',
+  'Medication Refills',
+  'Lifestyle and Wellness Counseling',
+  'Nutritional Counseling',
+  'Smoking Cessation Programs',
+  'Therapy and Counseling Sessions'];
 
   useEffect(() => {
     fetchDoctors();
@@ -64,15 +77,32 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
     let intervalId: NodeJS.Timeout;
     
     if (paymentMethod === 'mpesa' && paymentStatus === 'pending' && appointmentId) {
+      // Initial check immediately
+      checkPaymentStatus();
+      
+      // Then check every 5 seconds for the first 2 minutes
       intervalId = setInterval(() => {
+        // Auto-stop polling after 2 minutes (24 attempts)
+        if (pollCount.current >= 24) {
+          clearInterval(intervalId);
+          return;
+        }
+        
         checkPaymentStatus();
-      }, 5000); // Check every 5 seconds
+        pollCount.current += 1;
+      }, 5000);
     }
     
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
   }, [paymentMethod, paymentStatus, appointmentId]);
+
+  useEffect(() => {
+    if (appointmentId) {
+      pollCount.current = 0;
+    }
+  }, [appointmentId]);
 
   const fetchDoctors = async () => {
     try {
@@ -98,17 +128,49 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
         const newStatus = response.data.paymentStatus;
         setPaymentStatus(newStatus);
         
+        // Store payment description if available
+        if (response.data.description) {
+          setPaymentDescription(response.data.description);
+        }
+        
+        // Handle different payment statuses
         if (newStatus === 'completed') {
           // Payment is complete, fetch appointment details to get room code
           const appointmentResponse = await axios.get(`${BASE_URL}/appointments/${appointmentId}`);
           if (appointmentResponse.data.success) {
             setRoomCode(appointmentResponse.data.appointment.room_code);
-            setStep(5); // Move to confirmation screen
+            
+            // Show success message
+            Alert.alert(
+              'Payment Successful',
+              'Your payment has been processed successfully.'
+            );
+            
+            // Move to confirmation screen
+            setStep(5);
+          }
+        } else if (newStatus === 'failed') {
+          // Payment failed
+          Alert.alert(
+            'Payment Failed',
+            response.data.description || 'Your payment could not be processed. Please try again.'
+          );
+        } else if (newStatus === 'pending') {
+          // Still pending, show message only if description is available
+          if (response.data.description && response.data.description !== 'No status description available') {
+            Alert.alert(
+              'Payment Status',
+              response.data.description
+            );
           }
         }
       }
     } catch (error) {
       console.error('Error checking payment status:', error);
+      Alert.alert(
+        'Error',
+        'Could not check payment status. Please try again.'
+      );
     } finally {
       setCheckingPaymentStatus(false);
     }
@@ -147,14 +209,19 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
         paymentMethod,
         paymentDetails
       });
-
+  
       if (response.data.success) {
         setPaymentStatus(response.data.paymentStatus);
         setRoomCode(response.data.roomCode);
         setAppointmentId(response.data.appointmentId);
         
+        // Store additional fields from the response
         if (response.data.checkoutRequestID) {
           setCheckoutRequestID(response.data.checkoutRequestID);
+        }
+        
+        if (response.data.description) {
+          setPaymentDescription(response.data.description);
         }
         
         // For M-Pesa, stay on the payment screen until confirmation
@@ -163,16 +230,19 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
             'M-Pesa Payment',
             'Please check your phone for the M-Pesa prompt and enter your PIN to complete payment.'
           );
+          
+          // Reset polling count when starting a new payment
+          pollCount.current = 0;
         } else {
           // For other payment methods or if payment already completed, proceed to confirmation
           setStep(5);
         }
       } else {
-        Alert.alert('Error', 'Failed to create appointment');
+        Alert.alert('Error', response.data.error || 'Failed to create appointment');
       }
     } catch (error) {
       console.error('Error creating appointment:', error);
-      Alert.alert('Error', 'An error occurred');
+      Alert.alert('Error', error.response?.data?.error || 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -258,7 +328,7 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
                     <Text style={styles.doctorName}>{doctor.name}</Text>
                     <Text style={styles.doctorSpecialty}>{doctor.specialization}</Text>
                     <Text style={styles.doctorAvailability}>{doctor.availability}</Text>
-                    <Text style={styles.doctorPrice}>${doctor.price}</Text>
+                    <Text style={styles.doctorPrice}>Ksh{doctor.price}</Text>
                   </View>
                 </TouchableOpacity>
               ))
@@ -350,7 +420,7 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
                 </View>
                 <View style={styles.summaryLine}>
                   <Text style={styles.summaryLabel}>Amount:</Text>
-                  <Text style={styles.summaryValue}>${selectedDoctor?.price}</Text>
+                  <Text style={styles.summaryValue}>Ksh{selectedDoctor?.price}</Text>
                 </View>
               </View>
 
@@ -450,7 +520,9 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.mpesaStatusTitle}>M-Pesa Payment Status</Text>
                   <View style={styles.mpesaStatusIndicator}>
                     <ActivityIndicator color="#007AFF" size="small" />
-                    <Text style={styles.mpesaStatusText}>Waiting for payment confirmation...</Text>
+                    <Text style={styles.mpesaStatusText}>
+                      {paymentDescription || 'Waiting for payment confirmation...'}
+                    </Text>
                   </View>
                   <TouchableOpacity 
                     style={styles.refreshButton}
@@ -479,9 +551,17 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.nextButtonText}>Pay ${selectedDoctor?.price}</Text>
+                  <Text style={styles.nextButtonText}>Pay Ksh{selectedDoctor?.price}</Text>
                 )}
               </TouchableOpacity>
+            ) : paymentStatus === 'pending' ? (
+              <TouchableOpacity
+                style={styles.nextButton}
+                onPress={() => setStep(5)}
+              >
+                <Text style={styles.nextButtonText}>Continue to Confirmation</Text>
+              </TouchableOpacity>
+            ) : null}
             ) : paymentStatus === 'pending' ? (
               <TouchableOpacity
                 style={styles.nextButton}
@@ -502,12 +582,14 @@ const TelemedicineAppointment: React.FC<Props> = ({ navigation }) => {
               </View>
               <Text style={styles.successHeader}>Appointment Confirmed!</Text>
               
-              <View style={styles.paymentStatusBadge} style={[
+              <View style={[
                 styles.paymentStatusBadge,
-                paymentStatus === 'completed' ? styles.paymentCompleted : styles.paymentPending
+                paymentStatus === 'completed' ? styles.paymentCompleted : 
+                paymentStatus === 'failed' ? styles.paymentFailed : styles.paymentPending
               ]}>
                 <Text style={styles.paymentStatusText}>
-                  Payment: {paymentStatus === 'completed' ? 'Completed' : 'Pending'}
+                  Payment: {paymentStatus === 'completed' ? 'Completed' : 
+                          paymentStatus === 'failed' ? 'Failed' : 'Pending'}
                 </Text>
               </View>
               
@@ -974,7 +1056,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#28a745',
   },
+  paymentDescription: {
+    textAlign: 'center',
+    marginTop: 8,
+    fontSize: 12,
+    color: '#666',
+    paddingHorizontal: 16,
+  },
   
+  paymentFailed: {
+    backgroundColor: '#ffdddd',
+    borderColor: '#ff6666',
+  },
   // For the check payment button in the confirmation screen
   checkPaymentButton: {
     backgroundColor: '#007AFF',
